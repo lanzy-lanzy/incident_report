@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Incident - Incident Report System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6">
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="px-6 py-4 bg-primary text-white">
+            <h2 class="text-xl font-bold">Report a New Incident</h2>
+        </div>
+
+        <div class="p-6">
+            <form method="POST" action="{% url 'report_incident' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="space-y-6">
+                    <!-- Title -->
+                    <div>
+                        <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Incident Title
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.title.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Disaster Type -->
+                    <div>
+                        <label for="{{ form.disaster_type.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Disaster Type
+                        </label>
+                        {{ form.disaster_type }}
+                        {% if form.disaster_type.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.disaster_type.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Location -->
+                    <div>
+                        <label for="{{ form.location.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Location
+                        </label>
+                        {{ form.location }}
+                        {% if form.location.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.location.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Description
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.description.errors.0 }}
+                        </p>
+                        {% endif %}
+                        <p class="mt-2 text-sm text-gray-500">
+                            Please provide a detailed description of the incident, including the severity, number of people affected, and any immediate needs.
+                        </p>
+                    </div>
+
+                    <!-- Photo Upload Section -->
+                    <div class="mt-8 border-t border-gray-200 pt-6">
+                        <h3 class="text-lg font-medium text-gray-900">Upload Photos</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Upload photos of the incident to help us better understand the situation. This will assist in verification.
+                        </p>
+
+                        <div class="mt-4 space-y-4">
+                            <div>
+                                <label for="{{ form.photo_1.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                    Photo 1
+                                </label>
+                                <div class="mt-1">
+                                    {{ form.photo_1 }}
+                                </div>
+                                {% if form.photo_1.errors %}
+                                <p class="mt-2 text-sm text-red-600">
+                                    {{ form.photo_1.errors.0 }}
+                                </p>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <label for="{{ form.photo_2.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                    Photo 2 (Optional)
+                                </label>
+                                <div class="mt-1">
+                                    {{ form.photo_2 }}
+                                </div>
+                                {% if form.photo_2.errors %}
+                                <p class="mt-2 text-sm text-red-600">
+                                    {{ form.photo_2.errors.0 }}
+                                </p>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <label for="{{ form.photo_3.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                    Photo 3 (Optional)
+                                </label>
+                                <div class="mt-1">
+                                    {{ form.photo_3 }}
+                                </div>
+                                {% if form.photo_3.errors %}
+                                <p class="mt-2 text-sm text-red-600">
+                                    {{ form.photo_3.errors.0 }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resource Needs -->
+                    <div class="mt-8 border-t border-gray-200 pt-6">
+                        <h3 class="text-lg font-medium text-gray-900">Resource Needs</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Specify what resources are needed for this incident. This will help us respond more effectively.
+                        </p>
+
+                        <div class="mt-4">
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    {{ form.needs_resources }}
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="{{ form.needs_resources.id_for_label }}" class="font-medium text-gray-700">
+                                        This incident requires resources
+                                    </label>
+                                    <p class="text-gray-500">
+                                        Check this box if you need to request resources like food, water, medical supplies, etc.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="resource-requests" class="mt-4 space-y-4">
+                            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                                <div class="sm:col-span-3">
+                                    <label class="block text-sm font-medium text-gray-700">
+                                        Resource Type
+                                    </label>
+                                    <select name="resource_type_1" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                        <option value="">Select Resource Type</option>
+                                        {% for resource in resource_types %}
+                                        <option value="{{ resource.id }}">{{ resource.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="sm:col-span-3">
+                                    <label class="block text-sm font-medium text-gray-700">
+                                        Quantity Needed
+                                    </label>
+                                    <input type="number" name="quantity_1" min="1" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Quantity">
+                                </div>
+                            </div>
+
+                            <div id="additional-resources"></div>
+
+                            <button type="button" id="add-resource" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <svg class="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add Another Resource
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-8">
+                        <a href="{% url 'dashboard' %}" class="mr-4 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            Submit Report
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-8 bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gray-100">
+            <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+        </div>
+        <div class="p-6">
+            <div class="prose max-w-none">
+                <p>When reporting an incident, please keep the following in mind:</p>
+                <ul class="list-disc pl-5 space-y-2">
+                    <li>Provide accurate location information to help responders find the affected area.</li>
+                    <li>Be as detailed as possible in your description.</li>
+                    <li>Include information about the number of people affected if known.</li>
+                    <li>Upload photos of the incident to help verify the report and assess the situation.</li>
+                    <li>Mention any immediate needs such as medical assistance, food, water, or shelter.</li>
+                    <li>Request specific resources that are needed for the affected area.</li>
+                    <li>Your report will be reviewed by our team before being made public.</li>
+                </ul>
+                <p class="mt-4">Thank you for helping us coordinate disaster response efforts.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const needsResourcesCheckbox = document.getElementById('{{ form.needs_resources.id_for_label }}');
+        const resourceRequestsDiv = document.getElementById('resource-requests');
+        const addResourceButton = document.getElementById('add-resource');
+        const additionalResourcesDiv = document.getElementById('additional-resources');
+
+        let resourceCount = 1;
+
+        // Toggle resource requests visibility based on checkbox
+        function toggleResourceRequests() {
+            if (needsResourcesCheckbox.checked) {
+                resourceRequestsDiv.classList.remove('hidden');
+            } else {
+                resourceRequestsDiv.classList.add('hidden');
+            }
+        }
+
+        // Initial state
+        toggleResourceRequests();
+
+        // Add event listener to checkbox
+        needsResourcesCheckbox.addEventListener('change', toggleResourceRequests);
+
+        // Add new resource request fields
+        addResourceButton.addEventListener('click', function() {
+            resourceCount++;
+
+            const newResourceFields = document.createElement('div');
+            newResourceFields.className = 'grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 mt-4 pt-4 border-t border-gray-200';
+            newResourceFields.innerHTML = `
+                <div class="sm:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Resource Type
+                    </label>
+                    <select name="resource_type_${resourceCount}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                        <option value="">Select Resource Type</option>
+                        {% for resource in resource_types %}
+                        <option value="{{ resource.id }}">{{ resource.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Quantity Needed
+                    </label>
+                    <input type="number" name="quantity_${resourceCount}" min="1" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Quantity">
+                </div>
+
+                <div class="sm:col-span-1 flex items-end">
+                    <button type="button" class="remove-resource inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            `;
+
+            additionalResourcesDiv.appendChild(newResourceFields);
+
+            // Add event listener to remove button
+            newResourceFields.querySelector('.remove-resource').addEventListener('click', function() {
+                additionalResourcesDiv.removeChild(newResourceFields);
+            });
+        });
+    });
+</script>
+{% endblock %}

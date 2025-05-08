@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Incident Report System{% endblock %}</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- HTMX CDN -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#0ea5e9',
+                        accent: '#f97316',
+                        danger: '#dc2626',
+                        success: '#16a34a',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS -->
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navbar -->
+    {% include 'components/navbar.html' %}
+
+    <!-- Messages -->
+    {% include 'components/messages.html' %}
+
+    <!-- Main Content -->
+    <div class="flex flex-1">
+        {% block sidebar %}
+            {% include 'components/sidebar.html' %}
+        {% endblock %}
+
+        <main class="flex-1 p-4 md:p-6">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Footer -->
+    {% include 'components/footer.html' %}
+
+    <!-- Scripts -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>
