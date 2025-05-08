@@ -100,9 +100,8 @@ def report_incident(request):
             incident.reporter = request.user
 
             # Handle "Others" disaster type
-            if request.POST.get('disaster_type') == 'others':
-                # Set disaster_type to None and use other_disaster_type field
-                incident.disaster_type = None
+            if incident.disaster_type and incident.disaster_type.name == 'Others':
+                # Keep the disaster_type as "Others" but also store the specific type
                 incident.other_disaster_type = form.cleaned_data['other_disaster_type']
 
             incident.save()

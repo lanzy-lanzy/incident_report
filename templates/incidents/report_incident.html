@@ -274,12 +274,6 @@
         const disasterTypeSelect = document.getElementById('id_disaster_type_select');
         const otherDisasterTypeContainer = document.getElementById('other-disaster-type-container');
 
-        // Add "Others" option to the disaster type dropdown
-        const othersOption = document.createElement('option');
-        othersOption.value = 'others';
-        othersOption.text = 'Others (please specify)';
-        disasterTypeSelect.appendChild(othersOption);
-
         let resourceCount = 1;
 
         // Toggle resource requests visibility based on checkbox
@@ -293,7 +287,11 @@
 
         // Toggle other disaster type field visibility based on selection
         function toggleOtherDisasterType() {
-            if (disasterTypeSelect.value === 'others') {
+            // Get the selected option text
+            const selectedOption = disasterTypeSelect.options[disasterTypeSelect.selectedIndex];
+            const selectedText = selectedOption ? selectedOption.text : '';
+
+            if (selectedText === 'Others') {
                 otherDisasterTypeContainer.classList.remove('hidden');
                 document.getElementById('id_other_disaster_type').setAttribute('required', 'required');
             } else {
@@ -307,6 +305,7 @@
 
         // Initial state
         toggleResourceRequests();
+        toggleOtherDisasterType();
 
         // Add event listener to checkbox
         needsResourcesCheckbox.addEventListener('change', toggleResourceRequests);
