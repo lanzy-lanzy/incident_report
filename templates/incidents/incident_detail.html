@@ -24,7 +24,7 @@
                     </span>
                     {% elif incident.status == 'denied' %}
                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                        Denied
+                        Disapproved
                     </span>
                     {% else %}
                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
@@ -48,7 +48,7 @@
                     <svg class="mr-1.5 -ml-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    Deny Incident
+                    Disapprove Incident
                 </a>
                 {% endif %}
             </div>
@@ -64,7 +64,7 @@
                         </svg>
                     </div>
                     <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">This incident report has been denied</h3>
+                        <h3 class="text-sm font-medium text-red-800">This incident report has been disapproved</h3>
                         <div class="mt-2 text-sm text-red-700">
                             <p>Reason: {{ incident.denial_reason }}</p>
                         </div>
@@ -384,7 +384,7 @@
                 <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                     <div class="px-4 py-5 sm:px-6 bg-gray-50">
                         <h3 class="text-lg leading-6 font-medium text-gray-900">
-                            Incident Denied
+                            Incident Disapproved
                         </h3>
                     </div>
                     <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
@@ -392,9 +392,9 @@
                             <svg class="mx-auto h-12 w-12 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                             </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">This incident has been denied</h3>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">This incident has been disapproved</h3>
                             <p class="mt-1 text-sm text-gray-500">
-                                Resource requests are not available for denied incidents.
+                                Resource requests are not available for disapproved incidents.
                             </p>
                         </div>
                     </div>
