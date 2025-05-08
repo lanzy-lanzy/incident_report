@@ -4,7 +4,9 @@ from .views import (
     report_incident, dashboard, incident_detail,
     admin_dashboard, verify_incident, deny_incident,
     inventory_list, update_inventory, distribution_list, approve_distribution,
-    recent_incidents_api, mark_notification_read
+    recent_incidents_api, mark_notification_read,
+    report_list, export_report,
+    create_alert, manage_alerts, activate_alert, deactivate_alert
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -32,11 +34,21 @@ urlpatterns = [
     path('distributions/', distribution_list, name='distribution_list'),
     path('approve-distribution/<int:distribution_id>/', approve_distribution, name='approve_distribution'),
 
+    # Report URLs
+    path('reports/', report_list, name='report_list'),
+    path('export-report/', export_report, name='export_report'),
+
     # API URLs for HTMX
     path('api/recent-incidents/', recent_incidents_api, name='recent_incidents_api'),
 
     # Notification URLs
     path('notifications/mark-read/<int:notification_id>/', mark_notification_read, name='mark_notification_read'),
+
+    # Disaster Alert URLs
+    path('alerts/create/', create_alert, name='create_alert'),
+    path('alerts/manage/', manage_alerts, name='manage_alerts'),
+    path('alerts/activate/<int:alert_id>/', activate_alert, name='activate_alert'),
+    path('alerts/deactivate/<int:alert_id>/', deactivate_alert, name='deactivate_alert'),
 ]
 
 # Add media URL patterns in development

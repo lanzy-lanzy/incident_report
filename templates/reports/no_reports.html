@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}No Reports - Incident Report System{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-2xl font-bold text-gray-900">No Reports Available</h1>
+                <div class="hidden md:flex items-center space-x-4">
+                    <img src="/static/logo/mdrrmc_logo.png" alt="MDRRMC Logo" class="h-12 w-auto">
+                    <img src="/static/logo/lgu_logo.png" alt="LGU Logo" class="h-12 w-auto">
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="{% url 'export_report' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to Export
+                </a>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 class="mt-2 text-lg font-medium text-gray-900">No Reports Found</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    There are no reports matching your filter criteria. Please try different filters or add some incident reports first.
+                </p>
+                <div class="mt-6">
+                    <a href="{% url 'report_list' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        View All Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

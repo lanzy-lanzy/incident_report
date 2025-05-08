@@ -23,9 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-beou8z3-y$4y_=1rapx%&l4gz5hm4g4(%p3^y7ua6!2f1*11=)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# Set DEBUG to False to see custom error pages like 404.html
+# For development, you can keep it as True
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# When DEBUG is False, ALLOWED_HOSTS must contain the host/domain names that this Django site can serve
+# For development with DEBUG=False, you can use:
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

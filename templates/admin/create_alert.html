@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Disaster Alert - Incident Report System{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="px-4 py-5 border-b border-gray-200 sm:px-6 bg-gray-50">
+                <h1 class="text-lg font-medium leading-6 text-gray-900">Create Disaster Alert</h1>
+                <p class="mt-1 text-sm text-gray-500">
+                    Create an alert to notify users about upcoming disasters or emergency situations.
+                </p>
+            </div>
+            
+            <form method="post" class="px-4 py-5 sm:p-6">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+                
+                <div class="space-y-6">
+                    <!-- Title Field -->
+                    <div>
+                        <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Alert Title
+                        </label>
+                        <div class="mt-1">
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.title.errors }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Message Field -->
+                    <div>
+                        <label for="{{ form.message.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Alert Message
+                        </label>
+                        <div class="mt-1">
+                            {{ form.message }}
+                            {% if form.message.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.message.errors }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Severity Field -->
+                    <div>
+                        <label for="{{ form.severity.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Alert Severity
+                        </label>
+                        <div class="mt-1">
+                            {{ form.severity }}
+                            {% if form.severity.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.severity.errors }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex items-center justify-end space-x-3">
+                    <a href="{% url 'admin_dashboard' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Create Alert
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add styling to form fields
+        const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+        const messageInput = document.getElementById('{{ form.message.id_for_label }}');
+        const severitySelect = document.getElementById('{{ form.severity.id_for_label }}');
+        
+        if (titleInput) {
+            titleInput.classList.add('mt-1', 'block', 'w-full', 'rounded-md', 'border-gray-300', 'shadow-sm', 'focus:border-primary', 'focus:ring', 'focus:ring-primary', 'focus:ring-opacity-50');
+        }
+        
+        if (messageInput) {
+            messageInput.classList.add('mt-1', 'block', 'w-full', 'rounded-md', 'border-gray-300', 'shadow-sm', 'focus:border-primary', 'focus:ring', 'focus:ring-primary', 'focus:ring-opacity-50');
+            messageInput.rows = 4;
+        }
+        
+        if (severitySelect) {
+            severitySelect.classList.add('mt-1', 'block', 'w-full', 'rounded-md', 'border-gray-300', 'shadow-sm', 'focus:border-primary', 'focus:ring', 'focus:ring-primary', 'focus:ring-opacity-50');
+        }
+    });
+</script>
+{% endblock %}

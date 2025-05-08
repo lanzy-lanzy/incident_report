@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found - Incident Report System{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/error-pages.css">
+{% endblock %}
+
+{% block sidebar %}
+<!-- No sidebar on error page -->
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="text-center">
+        <div class="mb-8">
+            <img src="/static/logo/mdrrmc_logo.png" alt="MDRRMC Logo" class="h-24 w-auto mx-auto">
+        </div>
+
+        <div class="error-card">
+            <div class="error-header">
+                <div class="error-code">404</div>
+                <div class="error-title">Page Not Found</div>
+            </div>
+
+            <div class="error-body">
+                <div class="error-icon">
+                    <svg class="h-full w-full" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+
+                <h2 class="error-message">We couldn't find this page</h2>
+                <p class="error-description">The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.</p>
+
+                <div class="error-actions">
+                    <a href="{% url 'home' %}" class="btn-primary">
+                        Return to Home Page
+                    </a>
+
+                    <a href="{% url 'dashboard' %}" class="btn-secondary">
+                        Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="error-footer">
+            <p>If you believe this is an error, please contact the system administrator.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

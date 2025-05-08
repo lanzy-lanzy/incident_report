@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}PDF Report - Incident Report System{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-2xl font-bold text-gray-900">PDF Report Preview</h1>
+                <div class="hidden md:flex items-center space-x-4">
+                    <img src="/static/logo/mdrrmc_logo.png" alt="MDRRMC Logo" class="h-12 w-auto">
+                    <img src="/static/logo/lgu_logo.png" alt="LGU Logo" class="h-12 w-auto">
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="{% url 'export_report' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to Export
+                </a>
+            </div>
+        </div>
+
+        <!-- PDF Embed -->
+        <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">PDF Report</h3>
+                <div class="mt-2 max-w-xl text-sm text-gray-500">
+                    <p>Below is your generated PDF report. You can download it using the button below.</p>
+                </div>
+                
+                <div class="mt-5">
+                    <a href="{{ pdf_url }}" download="incident_report.pdf" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Download PDF
+                    </a>
+                </div>
+                
+                <div class="mt-5 border border-gray-200 rounded-md">
+                    <iframe src="{{ pdf_url }}" width="100%" height="800px" style="border: none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

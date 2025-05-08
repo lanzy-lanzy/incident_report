@@ -40,6 +40,22 @@
                         {% endif %}
                     </div>
 
+                    <!-- Other Disaster Type (hidden by default) -->
+                    <div id="other-disaster-type-container" class="hidden">
+                        <label for="{{ form.other_disaster_type.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Please Specify Disaster Type
+                        </label>
+                        {{ form.other_disaster_type }}
+                        {% if form.other_disaster_type.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.other_disaster_type.errors.0 }}
+                        </p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">
+                            Please provide details about the type of disaster
+                        </p>
+                    </div>
+
                     <!-- Barangay Selection -->
                     <div>
                         <label for="{{ form.barangay.id_for_label }}" class="block text-sm font-medium text-gray-700">
@@ -69,6 +85,22 @@
                         {% endif %}
                         <p class="mt-1 text-sm text-gray-500">
                             Provide more specific details about the location (e.g., street name, landmark)
+                        </p>
+                    </div>
+
+                    <!-- Incident Date and Time -->
+                    <div>
+                        <label for="{{ form.incident_datetime.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            When did the incident occur? (Optional)
+                        </label>
+                        {{ form.incident_datetime }}
+                        {% if form.incident_datetime.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.incident_datetime.errors.0 }}
+                        </p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">
+                            Select the date and time when the incident occurred. Leave blank if reporting in real-time.
                         </p>
                     </div>
 
@@ -239,6 +271,14 @@
         const resourceRequestsDiv = document.getElementById('resource-requests');
         const addResourceButton = document.getElementById('add-resource');
         const additionalResourcesDiv = document.getElementById('additional-resources');
+        const disasterTypeSelect = document.getElementById('id_disaster_type_select');
+        const otherDisasterTypeContainer = document.getElementById('other-disaster-type-container');
+
+        // Add "Others" option to the disaster type dropdown
+        const othersOption = document.createElement('option');
+        othersOption.value = 'others';
+        othersOption.text = 'Others (please specify)';
+        disasterTypeSelect.appendChild(othersOption);
 
         let resourceCount = 1;
 
@@ -250,6 +290,20 @@
                 resourceRequestsDiv.classList.add('hidden');
             }
         }
+
+        // Toggle other disaster type field visibility based on selection
+        function toggleOtherDisasterType() {
+            if (disasterTypeSelect.value === 'others') {
+                otherDisasterTypeContainer.classList.remove('hidden');
+                document.getElementById('id_other_disaster_type').setAttribute('required', 'required');
+            } else {
+                otherDisasterTypeContainer.classList.add('hidden');
+                document.getElementById('id_other_disaster_type').removeAttribute('required');
+            }
+        }
+
+        // Add event listener to disaster type select
+        disasterTypeSelect.addEventListener('change', toggleOtherDisasterType);
 
         // Initial state
         toggleResourceRequests();

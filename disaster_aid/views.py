@@ -2,17 +2,21 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Sum, Count
-from django.http import JsonResponse
+from django.db.models import Count
+from django.http import HttpResponse
 from django.core.paginator import Paginator
+from django.utils import timezone
 from .forms import (
     LoginForm, RegisterForm, IncidentReportForm,
-    DistributionRequestForm, InventoryForm, DenyIncidentForm
+    DistributionRequestForm, InventoryForm, DenyIncidentForm,
+    DisasterAlertForm
 )
 from .models import (
     IncidentReport, DisasterType, DistributionType,
-    Inventory, IncidentDistribution, UserNotification
+    Inventory, IncidentDistribution, UserNotification,
+    DisasterAlert, Barangay, Municipality
 )
+import io
 
 def home(request):
     # Redirect admin users to the admin dashboard if they're logged in
@@ -94,6 +98,13 @@ def report_incident(request):
             # Save the incident report
             incident = form.save(commit=False)
             incident.reporter = request.user
+
+            # Handle "Others" disaster type
+            if request.POST.get('disaster_type') == 'others':
+                # Set disaster_type to None and use other_disaster_type field
+                incident.disaster_type = None
+                incident.other_disaster_type = form.cleaned_data['other_disaster_type']
+
             incident.save()
 
             # Check if photos were uploaded
@@ -277,6 +288,11 @@ def admin_dashboard(request):
         incident_count=Count('incidentreport')
     ).order_by('-incident_count')
 
+    # Get barangay statistics
+    barangay_stats = Barangay.objects.annotate(
+        incident_count=Count('incidents')
+    ).filter(incident_count__gt=0).order_by('-incident_count')
+
     # Paginate incidents
     paginator = Paginator(incidents, 10)  # Show 10 incidents per page
     page_number = request.GET.get('page')
@@ -290,6 +306,7 @@ def admin_dashboard(request):
         'distribution_count': distribution_count,
         'fulfilled_count': fulfilled_count,
         'disaster_stats': disaster_stats,
+        'barangay_stats': barangay_stats,
     }
 
     return render(request, 'dashboard/admin_dashboard.html', context)
@@ -476,3 +493,325 @@ def mark_notification_read(request, notification_id):
     # Redirect back to the referring page or dashboard
     next_url = request.GET.get('next', 'dashboard')
     return redirect(next_url)
+
+# Report Views
+@login_required
+def report_list(request):
+    if not request.user.is_staff:
+        messages.error(request, "You are not authorized to access the reports section.")
+        return redirect('dashboard')
+
+    # Get filter parameters
+    disaster_type = request.GET.get('disaster_type')
+    status = request.GET.get('status')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+
+    # Start with all incidents
+    incidents = IncidentReport.objects.all().order_by('-date_reported')
+
+    # Apply filters
+    if disaster_type:
+        incidents = incidents.filter(disaster_type__id=disaster_type)
+
+    if status:
+        if status == 'verified':
+            incidents = incidents.filter(is_verified=True)
+        elif status == 'pending':
+            incidents = incidents.filter(is_verified=False, status='pending')
+        elif status == 'denied':
+            incidents = incidents.filter(status='denied')
+
+    if date_from:
+        incidents = incidents.filter(date_reported__gte=date_from)
+
+    if date_to:
+        incidents = incidents.filter(date_reported__lte=date_to)
+
+    # Get disaster types for filter dropdown
+    disaster_types = DisasterType.objects.all()
+
+    # Paginate results
+    paginator = Paginator(incidents, 10)  # Show 10 incidents per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'disaster_types': disaster_types,
+        'current_filters': {
+            'disaster_type': disaster_type,
+            'status': status,
+            'date_from': date_from,
+            'date_to': date_to,
+        }
+    }
+
+    return render(request, 'reports/report_list.html', context)
+
+@login_required
+def export_report(request):
+    if not request.user.is_staff:
+        messages.error(request, "You are not authorized to export reports.")
+        return redirect('dashboard')
+
+    # Get filter parameters
+    disaster_type = request.GET.get('disaster_type')
+    status = request.GET.get('status')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    export_format = request.GET.get('format', 'pdf')
+
+    # Get disaster types for filter dropdown
+    disaster_types = DisasterType.objects.all()
+
+    # If form is submitted, generate the report
+    if 'generate' in request.GET:
+        # Start with all incidents
+        incidents = IncidentReport.objects.all().order_by('-date_reported')
+
+        # Apply filters
+        if disaster_type:
+            incidents = incidents.filter(disaster_type__id=disaster_type)
+
+        if status:
+            if status == 'verified':
+                incidents = incidents.filter(is_verified=True)
+            elif status == 'pending':
+                incidents = incidents.filter(is_verified=False, status='pending')
+            elif status == 'denied':
+                incidents = incidents.filter(status='denied')
+
+        if date_from:
+            incidents = incidents.filter(date_reported__gte=date_from)
+
+        if date_to:
+            incidents = incidents.filter(date_reported__lte=date_to)
+
+        # Check if there are any incidents matching the criteria
+        if not incidents.exists():
+            messages.warning(request, "No incidents found matching your criteria. Please try different filters.")
+            return render(request, 'reports/no_reports.html')
+
+        # Generate PDF report
+        if export_format == 'pdf':
+            return generate_pdf_report(request, incidents)
+
+    context = {
+        'disaster_types': disaster_types,
+        'current_filters': {
+            'disaster_type': disaster_type,
+            'status': status,
+            'date_from': date_from,
+            'date_to': date_to,
+        }
+    }
+
+    return render(request, 'reports/export_report.html', context)
+
+def generate_pdf_report(request, incidents):
+    # Create a file-like buffer to receive PDF data
+    buffer = io.BytesIO()
+
+    # Import ReportLab components
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
+    import os
+    from django.conf import settings
+
+    # Create the PDF object, using the buffer as its "file"
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+
+    # Container for the 'Flowable' objects
+    elements = []
+
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Heading1'],
+        fontSize=16,
+        alignment=TA_CENTER,
+        spaceAfter=12
+    )
+
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
+        parent=styles['Normal'],
+        fontSize=12,
+        alignment=TA_CENTER,
+        spaceAfter=12
+    )
+
+    # Add the logo
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'logo', 'mdrrmc_logo.png')
+    if os.path.exists(logo_path):
+        logo = Image(logo_path)
+        logo.drawHeight = 0.8 * inch
+        logo.drawWidth = 0.8 * inch
+        elements.append(logo)
+
+    # Add title
+    title = Paragraph("Incident Report Summary", title_style)
+    elements.append(title)
+    elements.append(Spacer(1, 0.25 * inch))
+
+    # Add date range info
+    date_info = Paragraph(f"Report generated on: {timezone.now().strftime('%B %d, %Y')}", subtitle_style)
+    elements.append(date_info)
+    elements.append(Spacer(1, 0.25 * inch))
+
+    # Create table data
+    data = [
+        ['ID', 'Title', 'Location', 'Disaster Type', 'Date Reported', 'Status']
+    ]
+
+    # Add incident data to table
+    for incident in incidents:
+        status = "Verified" if incident.is_verified else incident.status.capitalize()
+        location = incident.barangay.name if incident.barangay else incident.location
+
+        data.append([
+            str(incident.id),
+            incident.title,
+            location,
+            incident.disaster_type.name,
+            incident.date_reported.strftime('%Y-%m-%d'),
+            status
+        ])
+
+    # Create the table
+    table = Table(data, repeatRows=1)
+
+    # Add style to table
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+
+    elements.append(table)
+
+    # Add summary statistics
+    elements.append(Spacer(1, 0.5 * inch))
+    elements.append(Paragraph("Summary Statistics:", styles["Heading3"]))
+    elements.append(Spacer(1, 0.1 * inch))
+
+    verified_count = sum(1 for incident in incidents if incident.is_verified)
+    pending_count = sum(1 for incident in incidents if incident.status == 'pending')
+    denied_count = sum(1 for incident in incidents if incident.status == 'denied')
+
+    stats_data = [
+        ['Total Incidents', 'Verified', 'Pending', 'Denied'],
+        [str(len(incidents)), str(verified_count), str(pending_count), str(denied_count)]
+    ]
+
+    stats_table = Table(stats_data)
+    stats_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+
+    elements.append(stats_table)
+
+    # Build the PDF
+    doc.build(elements)
+
+    # Get the value of the BytesIO buffer and write it to the response
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    # Create the HttpResponse object with the appropriate PDF headers
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="incident_report.pdf"'
+
+    return response
+
+
+# Disaster Alert Views
+@login_required
+def create_alert(request):
+    if not request.user.is_staff:
+        messages.error(request, "You are not authorized to create disaster alerts.")
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        form = DisasterAlertForm(request.POST)
+        if form.is_valid():
+            alert = form.save(commit=False)
+            alert.created_by = request.user
+            alert.save()
+
+            messages.success(request, f"Disaster alert '{alert.title}' has been created and is now active.")
+            return redirect('manage_alerts')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        form = DisasterAlertForm()
+
+    return render(request, 'admin/create_alert.html', {'form': form})
+
+
+@login_required
+def manage_alerts(request):
+    if not request.user.is_staff:
+        messages.error(request, "You are not authorized to manage disaster alerts.")
+        return redirect('dashboard')
+
+    alerts = DisasterAlert.objects.all().order_by('-created_at')
+
+    return render(request, 'admin/manage_alerts.html', {'alerts': alerts})
+
+
+@login_required
+def deactivate_alert(request, alert_id):
+    if not request.user.is_staff:
+        messages.error(request, "You are not authorized to deactivate disaster alerts.")
+        return redirect('dashboard')
+
+    alert = get_object_or_404(DisasterAlert, id=alert_id)
+
+    if request.method == 'POST':
+        alert.is_active = False
+        alert.save()
+        messages.success(request, f"Disaster alert '{alert.title}' has been deactivated.")
+
+    return redirect('manage_alerts')
+
+
+@login_required
+def activate_alert(request, alert_id):
+    if not request.user.is_staff:
+        messages.error(request, "You are not authorized to activate disaster alerts.")
+        return redirect('dashboard')
+
+    alert = get_object_or_404(DisasterAlert, id=alert_id)
+
+    if request.method == 'POST':
+        alert.is_active = True
+        alert.save()
+        messages.success(request, f"Disaster alert '{alert.title}' has been activated.")
+
+    return redirect('manage_alerts')
+
+
+# Custom error handlers
+def handler404(request, exception):
+    """
+    Custom 404 error handler that renders our 404.html template
+    """
+    return render(request, '404.html', status=404)

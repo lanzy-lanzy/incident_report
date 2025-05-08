@@ -11,7 +11,11 @@
                 <h1 class="text-2xl font-semibold text-gray-900">{{ incident.title }}</h1>
                 <div class="mt-1 flex items-center">
                     <p class="text-sm text-gray-500">
-                        Reported by {{ incident.reporter.get_full_name|default:incident.reporter.username }} on {{ incident.date_reported|date:"F j, Y" }}
+                        Reported by {{ incident.reporter.get_full_name|default:incident.reporter.username }} on {{ incident.date_reported|date:"F j, Y H:i" }}
+                        {% if incident.incident_datetime %}
+                        <span class="mx-2 text-gray-500">•</span>
+                        <span>Incident occurred: {{ incident.incident_datetime|date:"F j, Y H:i" }}</span>
+                        {% endif %}
                     </p>
                     <span class="mx-2 text-gray-500">•</span>
                     {% if incident.status == 'verified' %}
@@ -90,7 +94,13 @@
                                     Disaster Type
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                    {{ incident.disaster_type.name }}
+                                    {% if incident.disaster_type %}
+                                        {{ incident.disaster_type.name }}
+                                    {% elif incident.other_disaster_type %}
+                                        {{ incident.other_disaster_type }} <span class="text-xs text-gray-500">(Other)</span>
+                                    {% else %}
+                                        Not specified
+                                    {% endif %}
                                 </dd>
                             </div>
                             <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">

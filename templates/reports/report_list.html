@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - Incident Report System{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-2xl font-bold text-gray-900">Incident Reports</h1>
+                <div class="hidden md:flex items-center space-x-4">
+                    <img src="/static/logo/mdrrmc_logo.png" alt="MDRRMC Logo" class="h-12 w-auto">
+                    <img src="/static/logo/lgu_logo.png" alt="LGU Logo" class="h-12 w-auto">
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="{% url 'export_report' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export Reports
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-md">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Filter Reports</h3>
+                <form method="GET" action="{% url 'report_list' %}" class="mt-4 grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4">
+                    <!-- Disaster Type Filter -->
+                    <div>
+                        <label for="disaster_type" class="block text-sm font-medium text-gray-700">Disaster Type</label>
+                        <select id="disaster_type" name="disaster_type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                            <option value="">All Types</option>
+                            {% for type in disaster_types %}
+                            <option value="{{ type.id }}" {% if current_filters.disaster_type == type.id|stringformat:"s" %}selected{% endif %}>{{ type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                            <option value="">All Statuses</option>
+                            <option value="verified" {% if current_filters.status == 'verified' %}selected{% endif %}>Verified</option>
+                            <option value="pending" {% if current_filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="denied" {% if current_filters.status == 'denied' %}selected{% endif %}>Denied</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range Filters -->
+                    <div>
+                        <label for="date_from" class="block text-sm font-medium text-gray-700">From Date</label>
+                        <input type="date" id="date_from" name="date_from" value="{{ current_filters.date_from }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+
+                    <div>
+                        <label for="date_to" class="block text-sm font-medium text-gray-700">To Date</label>
+                        <input type="date" id="date_to" name="date_to" value="{{ current_filters.date_to }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+
+                    <!-- Filter Button -->
+                    <div class="sm:col-span-2 lg:col-span-4 flex justify-end">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                            Apply Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Reports Table -->
+        <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-md">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Incident Reports</h3>
+                <div class="mt-4 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disaster Type</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Reported</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for incident in page_obj %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ incident.id }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ incident.title }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {% if incident.barangay %}
+                                    {{ incident.barangay.name }}, {{ incident.barangay.municipality.name }}
+                                    {% else %}
+                                    {{ incident.location }}
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ incident.disaster_type.name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ incident.date_reported|date:"Y-m-d" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if incident.is_verified %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Verified</span>
+                                    {% elif incident.status == 'denied' %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Denied</span>
+                                    {% else %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <a href="{% url 'incident_detail' incident.id %}" class="text-primary hover:text-blue-700">View</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">No incidents found matching the criteria.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <div class="mt-4 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+                    <div class="flex flex-1 justify-between sm:hidden">
+                        {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
+                        {% endif %}
+                        {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+                        {% endif %}
+                    </div>
+                    <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Showing
+                                <span class="font-medium">{{ page_obj.start_index }}</span>
+                                to
+                                <span class="font-medium">{{ page_obj.end_index }}</span>
+                                of
+                                <span class="font-medium">{{ page_obj.paginator.count }}</span>
+                                results
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                                {% if page_obj.has_previous %}
+                                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                                    <span class="sr-only">Previous</span>
+                                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                                {% endif %}
+                                
+                                {% for i in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == i %}
+                                    <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-primary bg-blue-50 ring-1 ring-inset ring-primary focus:outline-offset-0">{{ i }}</span>
+                                    {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                                    <a href="?page={{ i }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">{{ i }}</a>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                                    <span class="sr-only">Next</span>
+                                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                                {% endif %}
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

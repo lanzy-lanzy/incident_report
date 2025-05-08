@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from .models import (
     ReporterProfile, IncidentReport, DisasterType, IncidentDistribution,
-    DistributionType, Inventory, Municipality, Barangay
+    DistributionType, Inventory, Municipality, Barangay, DisasterAlert
 )
 
 # Common form field styling
@@ -142,6 +142,16 @@ class IncidentReportForm(forms.ModelForm):
             }
         )
     )
+    incident_datetime = forms.DateTimeField(
+        required=False,
+        widget=forms.DateTimeInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'type': 'datetime-local',
+            }
+        ),
+        help_text='When did the incident occur? Leave blank if reporting in real-time.'
+    )
     # Add barangay field
     barangay = forms.ModelChoiceField(
         queryset=Barangay.objects.filter(municipality__name='Tambulig').order_by('name'),
@@ -158,6 +168,18 @@ class IncidentReportForm(forms.ModelForm):
         widget=forms.Select(
             attrs={
                 'class': INPUT_CLASSES,
+                'id': 'id_disaster_type_select',
+            }
+        )
+    )
+
+    other_disaster_type = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Please specify the disaster type',
+                'id': 'id_other_disaster_type',
             }
         )
     )
@@ -204,7 +226,7 @@ class IncidentReportForm(forms.ModelForm):
 
     class Meta:
         model = IncidentReport
-        fields = ['title', 'description', 'barangay', 'location', 'disaster_type', 'needs_resources', 'photo_1', 'photo_2', 'photo_3']
+        fields = ['title', 'description', 'barangay', 'location', 'disaster_type', 'other_disaster_type', 'incident_datetime', 'needs_resources', 'photo_1', 'photo_2', 'photo_3']
 
 class DistributionRequestForm(forms.ModelForm):
     distribution_type = forms.ModelChoiceField(
@@ -282,3 +304,35 @@ class DenyIncidentForm(forms.Form):
         required=True,
         help_text='This reason will be shared with the reporter to explain why their incident was denied.'
     )
+
+
+class DisasterAlertForm(forms.ModelForm):
+    title = forms.CharField(
+        widget=forms.TextInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Alert Title',
+            }
+        )
+    )
+    message = forms.CharField(
+        widget=forms.Textarea(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Detailed alert message with instructions',
+                'rows': 4,
+            }
+        )
+    )
+    severity = forms.ChoiceField(
+        choices=DisasterAlert.SEVERITY_CHOICES,
+        widget=forms.Select(
+            attrs={
+                'class': INPUT_CLASSES,
+            }
+        )
+    )
+
+    class Meta:
+        model = DisasterAlert
+        fields = ['title', 'message', 'severity']

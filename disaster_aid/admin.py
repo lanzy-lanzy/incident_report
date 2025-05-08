@@ -8,7 +8,8 @@ from .models import (
     IncidentDistribution,
     UserNotification,
     Municipality,
-    Barangay
+    Barangay,
+    DisasterAlert
 )
 
 class ReporterProfileAdmin(admin.ModelAdmin):
@@ -46,6 +47,13 @@ class BarangayAdmin(admin.ModelAdmin):
     search_fields = ('name', 'psgc_code')
 
 
+class DisasterAlertAdmin(admin.ModelAdmin):
+    list_display = ('title', 'severity', 'created_by', 'created_at', 'is_active')
+    list_filter = ('severity', 'is_active', 'created_at')
+    search_fields = ('title', 'message')
+    date_hierarchy = 'created_at'
+
+
 
 # Register models
 admin.site.register(DisasterType)
@@ -57,3 +65,4 @@ admin.site.register(IncidentDistribution, IncidentDistributionAdmin)
 admin.site.register(UserNotification, UserNotificationAdmin)
 admin.site.register(Municipality, MunicipalityAdmin)
 admin.site.register(Barangay, BarangayAdmin)
+admin.site.register(DisasterAlert, DisasterAlertAdmin)

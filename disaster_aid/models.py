@@ -74,8 +74,10 @@ class IncidentReport(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     disaster_type = models.ForeignKey(DisasterType, on_delete=models.SET_NULL, null=True)
+    other_disaster_type = models.CharField(max_length=100, blank=True, null=True)
     location = models.CharField(max_length=255, blank=True, null=True)  # Keeping for backward compatibility
     barangay = models.ForeignKey(Barangay, on_delete=models.SET_NULL, null=True, blank=True, related_name='incidents')
+    incident_datetime = models.DateTimeField(null=True, blank=True, help_text="When the incident actually occurred")
     date_reported = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     is_verified = models.BooleanField(default=False)  # Keeping for backward compatibility
@@ -162,6 +164,34 @@ class IncidentDistribution(models.Model):
             )
         else:
             raise ValueError(f"Not enough {self.distribution_type.name} in stock. Available: {inventory.quantity_available}, Requested: {quantity}")
+
+
+# Disaster Alert for upcoming disasters
+class DisasterAlert(models.Model):
+    SEVERITY_CHOICES = (
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('critical', 'Critical'),
+    )
+
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default='medium')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_alerts')
+    created_at = models.DateTimeField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.get_severity_display()})"
+
+    def deactivate(self):
+        """Deactivate the alert"""
+        self.is_active = False
+        self.save()
 
 
 # User notifications

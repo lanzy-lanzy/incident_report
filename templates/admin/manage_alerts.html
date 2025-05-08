@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Disaster Alerts - Incident Report System{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-semibold text-gray-900">Manage Disaster Alerts</h1>
+            <a href="{% url 'create_alert' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create New Alert
+            </a>
+        </div>
+        
+        <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-md">
+            {% if alerts %}
+            <ul class="divide-y divide-gray-200">
+                {% for alert in alerts %}
+                <li class="{% if alert.is_active %}border-l-4 {% if alert.severity == 'critical' %}border-red-500{% elif alert.severity == 'high' %}border-orange-500{% elif alert.severity == 'medium' %}border-yellow-500{% else %}border-blue-500{% endif %}{% endif %}">
+                    <div class="px-4 py-5 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    {% if alert.severity == 'critical' %}
+                                    <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-red-100">
+                                        <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </span>
+                                    {% elif alert.severity == 'high' %}
+                                    <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-orange-100">
+                                        <svg class="h-6 w-6 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </span>
+                                    {% elif alert.severity == 'medium' %}
+                                    <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-yellow-100">
+                                        <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
+                                        <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        {{ alert.title }}
+                                        {% if alert.is_active %}
+                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Active
+                                        </span>
+                                        {% else %}
+                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            Inactive
+                                        </span>
+                                        {% endif %}
+                                    </h3>
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        {{ alert.message }}
+                                    </p>
+                                    <div class="mt-2 flex items-center text-sm text-gray-500">
+                                        <span class="inline-flex items-center text-xs">
+                                            Severity: <span class="ml-1 font-medium">{{ alert.get_severity_display }}</span>
+                                        </span>
+                                        <span class="mx-2">•</span>
+                                        <span class="inline-flex items-center text-xs">
+                                            Created: <span class="ml-1">{{ alert.created_at|date:"M d, Y H:i" }}</span>
+                                        </span>
+                                        <span class="mx-2">•</span>
+                                        <span class="inline-flex items-center text-xs">
+                                            By: <span class="ml-1">{{ alert.created_by.username }}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                {% if alert.is_active %}
+                                <form method="post" action="{% url 'deactivate_alert' alert.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        Deactivate
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'activate_alert' alert.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        Activate
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-4 py-10 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No alerts created</h3>
+                <p class="mt-1 text-sm text-gray-500">Get started by creating a new disaster alert.</p>
+                <div class="mt-6">
+                    <a href="{% url 'create_alert' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Create New Alert
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

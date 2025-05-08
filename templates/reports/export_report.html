@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Export Reports - Incident Report System{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-2xl font-bold text-gray-900">Export Incident Reports</h1>
+                <div class="hidden md:flex items-center space-x-4">
+                    <img src="/static/logo/mdrrmc_logo.png" alt="MDRRMC Logo" class="h-12 w-auto">
+                    <img src="/static/logo/lgu_logo.png" alt="LGU Logo" class="h-12 w-auto">
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="{% url 'report_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to Reports
+                </a>
+            </div>
+        </div>
+
+        <!-- Export Form -->
+        <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Generate Report</h3>
+                <div class="mt-2 max-w-xl text-sm text-gray-500">
+                    <p>Select the criteria for the report you want to generate. The report will include all incidents that match your criteria.</p>
+                </div>
+                
+                <form method="GET" action="{% url 'export_report' %}" class="mt-5 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-8">
+                    <!-- Disaster Type Filter -->
+                    <div>
+                        <label for="disaster_type" class="block text-sm font-medium text-gray-700">Disaster Type</label>
+                        <select id="disaster_type" name="disaster_type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                            <option value="">All Types</option>
+                            {% for type in disaster_types %}
+                            <option value="{{ type.id }}" {% if current_filters.disaster_type == type.id|stringformat:"s" %}selected{% endif %}>{{ type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                            <option value="">All Statuses</option>
+                            <option value="verified" {% if current_filters.status == 'verified' %}selected{% endif %}>Verified</option>
+                            <option value="pending" {% if current_filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="denied" {% if current_filters.status == 'denied' %}selected{% endif %}>Denied</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range Filters -->
+                    <div>
+                        <label for="date_from" class="block text-sm font-medium text-gray-700">From Date</label>
+                        <input type="date" id="date_from" name="date_from" value="{{ current_filters.date_from }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+
+                    <div>
+                        <label for="date_to" class="block text-sm font-medium text-gray-700">To Date</label>
+                        <input type="date" id="date_to" name="date_to" value="{{ current_filters.date_to }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+
+                    <!-- Export Format -->
+                    <div>
+                        <label for="format" class="block text-sm font-medium text-gray-700">Export Format</label>
+                        <select id="format" name="format" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                            <option value="pdf" selected>PDF Document</option>
+                        </select>
+                    </div>
+
+                    <!-- Hidden field to trigger report generation -->
+                    <input type="hidden" name="generate" value="true">
+
+                    <!-- Generate Button -->
+                    <div class="sm:col-span-2 flex justify-end">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Generate Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Report Preview -->
+        <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Report Preview</h3>
+                <div class="mt-2 max-w-xl text-sm text-gray-500">
+                    <p>Below is a preview of what your report will look like. The actual PDF will include additional formatting and the MDRRMC logo.</p>
+                </div>
+                
+                <div class="mt-5 border border-gray-200 rounded-md p-6 bg-gray-50">
+                    <div class="flex justify-center mb-4">
+                        <img src="/static/logo/mdrrmc_logo.png" alt="MDRRMC Logo" class="h-16 w-auto">
+                    </div>
+                    
+                    <h2 class="text-xl font-bold text-center mb-4">Incident Report Summary</h2>
+                    
+                    <p class="text-sm text-gray-600 mb-6 text-center">This report includes incidents based on your selected filters.</p>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disaster Type</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">1</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">Flood in Barangay A</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Barangay A, Municipality X</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Flood</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">2023-10-15</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Verified</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">2</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">Landslide in Barangay B</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Barangay B, Municipality X</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Landslide</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">2023-10-16</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">Pending</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <h3 class="text-md font-semibold mb-2">Summary Statistics:</h3>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Incidents</th>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verified</th>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</th>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Denied</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">2</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">1</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">1</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

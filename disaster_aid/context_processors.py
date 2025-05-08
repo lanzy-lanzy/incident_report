@@ -1,8 +1,8 @@
-from .models import IncidentReport, UserNotification
+from .models import IncidentReport, UserNotification, DisasterAlert
 
 def incident_notifications(request):
     """
-    Context processor to provide incident notifications to all templates.
+    Context processor to provide incident notifications and disaster alerts to all templates.
     """
     context = {
         'unverified_incidents_count': 0,
@@ -11,7 +11,16 @@ def incident_notifications(request):
         'user_notifications': [],
         'unread_user_notifications_count': 0,
         'has_user_notifications': False,
+        'active_disaster_alerts': [],
+        'has_active_alerts': False,
     }
+
+    # Get active disaster alerts for all users (authenticated or not)
+    active_alerts = DisasterAlert.objects.filter(is_active=True).order_by('-severity', '-created_at')
+    context.update({
+        'active_disaster_alerts': active_alerts,
+        'has_active_alerts': active_alerts.exists(),
+    })
 
     if request.user.is_authenticated:
         # Admin notifications for staff users
