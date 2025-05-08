@@ -320,6 +320,51 @@ def admin_dashboard(request):
         incident_count=Count('incidents')
     ).filter(incident_count__gt=0).order_by('-incident_count')
 
+    # Get time-based disaster statistics for line chart
+    from django.db.models.functions import TruncMonth, ExtractMonth, ExtractYear
+
+    # Get incidents with date information
+    time_incidents = IncidentReport.objects.filter(is_verified=True)
+
+    # Group incidents by month and disaster type
+    disaster_time_stats = []
+
+    # Use incident_datetime if available, otherwise use date_reported
+    time_incidents_with_datetime = time_incidents.filter(incident_datetime__isnull=False)
+    time_incidents_with_date_reported = time_incidents.filter(incident_datetime__isnull=True)
+
+    # Process incidents with incident_datetime
+    disaster_month_stats_datetime = time_incidents_with_datetime.annotate(
+        month=TruncMonth('incident_datetime'),
+        month_name=ExtractMonth('incident_datetime'),
+        year=ExtractYear('incident_datetime')
+    ).values('disaster_type__name', 'month', 'month_name', 'year').annotate(
+        count=Count('id')
+    ).order_by('year', 'month_name')
+
+    # Process incidents with only date_reported
+    disaster_month_stats_reported = time_incidents_with_date_reported.annotate(
+        month=TruncMonth('date_reported'),
+        month_name=ExtractMonth('date_reported'),
+        year=ExtractYear('date_reported')
+    ).values('disaster_type__name', 'month', 'month_name', 'year').annotate(
+        count=Count('id')
+    ).order_by('year', 'month_name')
+
+    # Combine both sets of statistics
+    for stat in list(disaster_month_stats_datetime) + list(disaster_month_stats_reported):
+        month_name = {
+            1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun',
+            7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'
+        }.get(stat['month_name'], 'Unknown')
+
+        disaster_time_stats.append({
+            'disaster_type': stat['disaster_type__name'],
+            'month': month_name,
+            'year': stat['year'],
+            'count': stat['count']
+        })
+
     # Paginate incidents
     paginator = Paginator(incidents, 10)  # Show 10 incidents per page
     page_number = request.GET.get('page')
@@ -334,6 +379,7 @@ def admin_dashboard(request):
         'fulfilled_count': fulfilled_count,
         'disaster_stats': disaster_stats,
         'barangay_stats': barangay_stats,
+        'disaster_time_stats': disaster_time_stats,
     }
 
     return render(request, 'dashboard/admin_dashboard.html', context)

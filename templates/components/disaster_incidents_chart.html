@@ -1,0 +1,123 @@
+{% if disaster_time_stats %}
+<div class="bg-white shadow rounded-lg p-4">
+    <h2 class="text-lg font-medium text-gray-900 mb-4">Incidents by Disaster Type (Timeline)</h2>
+    
+    <!-- Chart Canvas -->
+    <div class="h-64">
+        <canvas id="disasterLineChart"></canvas>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load Chart.js from CDN if not already loaded
+    if (typeof Chart === 'undefined') {
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+        script.onload = initDisasterLineChart;
+        document.head.appendChild(script);
+    } else {
+        initDisasterLineChart();
+    }
+    
+    function initDisasterLineChart() {
+        var ctx = document.getElementById('disasterLineChart').getContext('2d');
+        
+        // Extract data from the template
+        var disasterTimeData = [
+            {% for entry in disaster_time_stats %}
+                {
+                    disaster_type: '{{ entry.disaster_type }}',
+                    month: '{{ entry.month }}',
+                    year: {{ entry.year }},
+                    count: {{ entry.count }}
+                }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        // Get unique disaster types and time periods
+        var disasterTypes = [...new Set(disasterTimeData.map(item => item.disaster_type))];
+        var timePeriods = [...new Set(disasterTimeData.map(item => item.month + ' ' + item.year))];
+        
+        // Sort time periods chronologically
+        timePeriods.sort(function(a, b) {
+            var dateA = new Date(a);
+            var dateB = new Date(b);
+            return dateA - dateB;
+        });
+        
+        // Prepare datasets for each disaster type
+        var datasets = [];
+        var colorPalette = [
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(199, 199, 199, 0.7)',
+            'rgba(83, 102, 255, 0.7)',
+            'rgba(40, 159, 64, 0.7)',
+            'rgba(210, 199, 199, 0.7)'
+        ];
+        
+        disasterTypes.forEach(function(type, index) {
+            var typeData = disasterTimeData.filter(item => item.disaster_type === type);
+            var dataPoints = [];
+            
+            timePeriods.forEach(function(period) {
+                var entry = typeData.find(item => item.month + ' ' + item.year === period);
+                dataPoints.push(entry ? entry.count : 0);
+            });
+            
+            datasets.push({
+                label: type,
+                data: dataPoints,
+                borderColor: colorPalette[index % colorPalette.length],
+                backgroundColor: colorPalette[index % colorPalette.length].replace('0.7', '0.1'),
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            });
+        });
+        
+        // Create the chart
+        var disasterLineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timePeriods,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw;
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        });
+    }
+});
+</script>
+{% endif %}

@@ -1,12 +1,12 @@
 {% if barangay_stats %}
 <div class="bg-white shadow rounded-lg p-4">
-    <h2 class="text-lg font-medium text-gray-900 mb-4">Incidents by Barangay</h2>
-    
+    <h2 class="text-lg font-medium text-gray-900 mb-4">Incidents by Barangay (Trend Line)</h2>
+
     <!-- Chart Canvas -->
     <div class="h-64">
         <canvas id="barangayChart"></canvas>
     </div>
-    
+
     <!-- Table for data -->
     <div class="mt-4 overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
@@ -53,10 +53,10 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         initBarangayChart();
     }
-    
+
     function initBarangayChart() {
         var ctx = document.getElementById('barangayChart').getContext('2d');
-        
+
         // Extract data from the template
         var barangayData = [
             {% for barangay in barangay_stats %}
@@ -67,37 +67,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 }{% if not forloop.last %},{% endif %}
             {% endfor %}
         ];
-        
+
         // Prepare data for Chart.js
-        var labels = barangayData.map(function(item) { 
+        var labels = barangayData.map(function(item) {
             return item.name + ' (' + item.municipality + ')';
         });
-        
+
         var counts = barangayData.map(function(item) {
             return item.count;
         });
-        
+
         // Generate random colors for each barangay
         var backgroundColors = barangayData.map(function() {
-            return 'rgba(' + 
-                Math.floor(Math.random() * 200) + ',' + 
-                Math.floor(Math.random() * 200) + ',' + 
+            return 'rgba(' +
+                Math.floor(Math.random() * 200) + ',' +
+                Math.floor(Math.random() * 200) + ',' +
                 Math.floor(Math.random() * 200) + ', 0.6)';
         });
-        
+
         // Create the chart
         var barangayChart = new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Number of Incidents',
+                    label: 'Incident Trend by Barangay',
                     data: counts,
-                    backgroundColor: backgroundColors,
+                    backgroundColor: backgroundColors.map(function(color) {
+                        return color.replace('0.6', '0.2');
+                    }),
                     borderColor: backgroundColors.map(function(color) {
                         return color.replace('0.6', '1');
                     }),
-                    borderWidth: 1
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: backgroundColors.map(function(color) {
+                        return color.replace('0.6', '1');
+                    }),
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
                 }]
             },
             options: {
@@ -113,7 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 plugins: {
                     legend: {
-                        display: false
+                        display: true,
+                        position: 'top'
                     },
                     tooltip: {
                         callbacks: {
@@ -121,6 +133,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 return context.dataset.label + ': ' + context.raw;
                             }
                         }
+                    }
+                },
+                elements: {
+                    line: {
+                        tension: 0.4 // Makes the line curvy
                     }
                 }
             }
