@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 
-{% block title %}Deny Incident - {{ incident.title }}{% endblock %}
+{% block title %}Disapprove Incident - {{ incident.title }}{% endblock %}
 
 {% block content %}
 <div class="py-6">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
             <div class="px-6 py-4 bg-red-600 text-white">
-                <h2 class="text-xl font-bold">Deny Incident Report</h2>
+                <h2 class="text-xl font-bold">Disapprove Incident Report</h2>
             </div>
-            
+
             <div class="p-6">
                 <div class="mb-6">
                     <h3 class="text-lg font-medium text-gray-900">{{ incident.title }}</h3>
@@ -19,18 +19,18 @@
                         <span>{{ incident.date_reported|date:"F j, Y" }}</span>
                     </div>
                 </div>
-                
+
                 <div class="mb-6 p-4 bg-gray-50 rounded-lg">
                     <h4 class="text-sm font-medium text-gray-700 mb-2">Incident Description</h4>
                     <p class="text-sm text-gray-600">{{ incident.description }}</p>
                 </div>
-                
+
                 <form method="POST" action="{% url 'deny_incident' incident.id %}">
                     {% csrf_token %}
-                    
+
                     <div class="mb-6">
                         <label for="{{ form.denial_reason.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Reason for Denial
+                            Reason for Disapproval
                         </label>
                         <div class="mt-1">
                             {{ form.denial_reason }}
@@ -42,7 +42,7 @@
                         <p class="mt-2 text-sm text-red-600">{{ form.denial_reason.errors.0 }}</p>
                         {% endif %}
                     </div>
-                    
+
                     <div class="flex justify-end space-x-3">
                         <a href="{% url 'incident_detail' incident.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                             Cancel
@@ -51,25 +51,25 @@
                             <svg class="mr-2 -ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                            Deny Incident
+                            Disapprove Incident
                         </button>
                     </div>
                 </form>
             </div>
         </div>
-        
+
         <div class="mt-6 bg-white shadow-md rounded-lg overflow-hidden">
             <div class="px-6 py-4 bg-gray-100">
                 <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
             </div>
             <div class="p-6">
                 <div class="prose max-w-none">
-                    <p class="text-sm text-gray-600">When denying an incident report, please keep the following in mind:</p>
+                    <p class="text-sm text-gray-600">When disapproving an incident report, please keep the following in mind:</p>
                     <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600">
-                        <li>Provide a clear and specific reason for the denial.</li>
+                        <li>Provide a clear and specific reason for the disapproval.</li>
                         <li>Be respectful and professional in your explanation.</li>
                         <li>If applicable, suggest how the reporter could improve their submission.</li>
-                        <li>The reporter will receive a notification with your denial reason.</li>
+                        <li>The reporter will receive a notification with your disapproval reason.</li>
                     </ul>
                 </div>
             </div>

@@ -297,12 +297,12 @@ class DenyIncidentForm(forms.Form):
         widget=forms.Textarea(
             attrs={
                 'class': INPUT_CLASSES,
-                'placeholder': 'Please provide a reason for denying this incident report',
+                'placeholder': 'Please provide a reason for disapproving this incident report',
                 'rows': 3,
             }
         ),
         required=True,
-        help_text='This reason will be shared with the reporter to explain why their incident was denied.'
+        help_text='This reason will be shared with the reporter to explain why their incident was disapproved.'
     )
 
 
