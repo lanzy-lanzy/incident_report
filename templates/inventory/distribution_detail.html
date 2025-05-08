@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Distribution Details - Incident Report System{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900">Distribution Details</h1>
+                <p class="mt-1 text-sm text-gray-500">Comprehensive information about this resource distribution</p>
+            </div>
+            <div>
+                <a href="{% url 'distribution_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Back to Distributions
+                </a>
+            </div>
+        </div>
+
+        <!-- Distribution Information -->
+        <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-gray-50 flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Distribution #{{ distribution.id }}
+                    </h3>
+                    <p class="mt-1 text-sm text-gray-500">
+                        {{ distribution.distribution_type.name }} for {{ distribution.incident.title }}
+                    </p>
+                </div>
+                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {% if distribution.status == 'distributed' %}bg-green-100 text-green-800{% elif distribution.status == 'approved' %}bg-blue-100 text-blue-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                    {{ distribution.get_status_display }}
+                </span>
+            </div>
+            <div class="border-t border-gray-200">
+                <dl>
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Incident</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            <a href="{% url 'incident_detail' distribution.incident.id %}" class="text-primary hover:text-blue-900">
+                                {{ distribution.incident.title }}
+                            </a>
+                        </dd>
+                    </div>
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Resource Type</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.distribution_type.name }}</dd>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Quantity Requested</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.quantity_requested }}</dd>
+                    </div>
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Quantity Approved</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.quantity_approved }}</dd>
+                    </div>
+                    {% if distribution.status == 'distributed' %}
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Distribution Date</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.distribution_date|date:"F j, Y, g:i a" }}</dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        {% if distribution.status == 'distributed' %}
+        <!-- Recipient Information -->
+        <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Recipient Information
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    Details about who received the resources
+                </p>
+            </div>
+            <div class="border-t border-gray-200">
+                <dl>
+                    {% if distribution.recipient_organization %}
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Organization/Community</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.recipient_organization }}</dd>
+                    </div>
+                    {% endif %}
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Recipient Name</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.recipient_name }}</dd>
+                    </div>
+                    {% if distribution.recipient_contact %}
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Contact Information</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.recipient_contact }}</dd>
+                    </div>
+                    {% endif %}
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Distributed By</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.distributed_by }}</dd>
+                    </div>
+                    {% if distribution.beneficiary_list %}
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Beneficiary List</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            <div class="max-h-80 overflow-y-auto border border-gray-200 rounded-md p-4 bg-white">
+                                <ul class="divide-y divide-gray-200">
+                                    {% for beneficiary in distribution.beneficiary_list.splitlines %}
+                                        {% if beneficiary %}
+                                            <li class="py-3">{{ beneficiary }}</li>
+                                        {% endif %}
+                                    {% empty %}
+                                        <li class="py-3 text-gray-500 italic">No beneficiaries listed</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </dd>
+                    </div>
+                    {% endif %}
+
+                    {% if distribution.distribution_notes %}
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Distribution Notes</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.distribution_notes }}</dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Related Incident Information -->
+        <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Related Incident Information
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    Details about the incident this distribution is for
+                </p>
+            </div>
+            <div class="border-t border-gray-200">
+                <dl>
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Incident Title</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            <a href="{% url 'incident_detail' distribution.incident.id %}" class="text-primary hover:text-blue-900">
+                                {{ distribution.incident.title }}
+                            </a>
+                        </dd>
+                    </div>
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Disaster Type</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.incident.disaster_type.name }}</dd>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Location</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            {% if distribution.incident.barangay %}
+                                {{ distribution.incident.barangay }}
+                            {% else %}
+                                {{ distribution.incident.location }}
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Date Reported</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ distribution.incident.date_reported|date:"F j, Y" }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

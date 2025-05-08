@@ -1,4 +1,4 @@
-<div x-data="{ open: true }" class="h-full">
+<div x-data="{ open: true, reportsOpen: {% if '/reports/' in request.path or '/export-report/' in request.path %}true{% else %}false{% endif %} }" class="h-full">
     <!-- Toggle button for mobile -->
     <button @click="open = !open" class="md:hidden fixed bottom-4 right-4 bg-primary text-white p-2 rounded-full shadow-lg z-10">
         <svg x-show="!open" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -45,28 +45,55 @@
                 </a>
 
                 <!-- Distributions -->
-                <a href="{% url 'distribution_list' %}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/distributions/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <a href="{% url 'distribution_list' %}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/distributions/' in request.path and not '/complete-distribution/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
                     <svg class="mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    Distributions
+                    Resource Requests
                 </a>
 
-                <!-- Reports Section -->
-                <a href="{% url 'report_list' %}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/reports/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <!-- Distribution Management -->
+                <a href="{% url 'distribution_list' %}?status=approved" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/complete-distribution/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                    <svg class="mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    Distribution
+                </a>
+
+                <!-- Comprehensive Distribution Management -->
+                <a href="{% url 'distribution_management' %}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/distribution-management/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                    <svg class="mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Distribution Reports
+                </a>
+
+                <!-- Reports Section (Combined) -->
+                <a @click.prevent="reportsOpen = !reportsOpen" href="#" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/reports/' in request.path or '/export-report/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
                     <svg class="mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Reports
+                    <svg class="ml-2 h-4 w-4 text-gray-500 transition-transform duration-200" :class="reportsOpen ? 'transform rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
                 </a>
 
-                <!-- Export Reports -->
-                <a href="{% url 'export_report' %}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/export-report/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
-                    <svg class="mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Export Reports
-                </a>
+                <!-- Reports Submenu -->
+                <div x-show="reportsOpen" class="pl-8 space-y-1">
+                    <a href="{% url 'report_list' %}" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {% if '/reports/' in request.path and not '/export-report/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                        <svg class="mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        View Reports
+                    </a>
+                    <a href="{% url 'export_report' %}" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {% if '/export-report/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                        <svg class="mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Generate Reports
+                    </a>
+                </div>
 
                 <!-- Disaster Alerts -->
                 <a href="{% url 'manage_alerts' %}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/alerts/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
@@ -74,6 +101,23 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     Disaster Alerts
+                </a>
+
+                <!-- Evacuation Centers -->
+                <a href="{% url 'evacuation_center_list' %}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/evacuation-centers/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                    <svg class="mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    Evacuation Centers
+                </a>
+
+
+                <!-- Consolidated Table View -->
+                <a href="{% url 'consolidated_table_view' %}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/consolidated-table/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                    <svg class="mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Consolidated Data
                 </a>
 
                 {% else %}
@@ -91,6 +135,14 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     Report Incident
+                </a>
+
+                <!-- Evacuation Centers -->
+                <a href="{% url 'evacuation_center_list' %}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if '/evacuation-centers/' in request.path %}text-gray-900 bg-gray-100{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                    <svg class="mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    Evacuation Centers
                 </a>
                 {% endif %}
             </div>

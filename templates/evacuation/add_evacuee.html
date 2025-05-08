@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Evacuee - {{ center.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{% url 'evacuation_center_detail' center.id %}" class="text-primary hover:text-primary-dark">
+            <i class="fas fa-arrow-left mr-2"></i> Back to {{ center.name }}
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h1 class="text-xl font-semibold text-gray-800">Add Evacuee to {{ center.name }}</h1>
+            <p class="text-gray-600 mt-1">Current occupancy: {{ center.current_occupancy }} / {{ center.capacity }}</p>
+        </div>
+        
+        <div class="p-6">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700">Full Name <span class="text-red-500">*</span></label>
+                        <div class="mt-1">
+                            {{ form.name }}
+                        </div>
+                        {% if form.name.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.age.id_for_label }}" class="block text-sm font-medium text-gray-700">Age <span class="text-red-500">*</span></label>
+                        <div class="mt-1">
+                            {{ form.age }}
+                        </div>
+                        {% if form.age.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.age.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.gender.id_for_label }}" class="block text-sm font-medium text-gray-700">Gender <span class="text-red-500">*</span></label>
+                        <div class="mt-1">
+                            {{ form.gender }}
+                        </div>
+                        {% if form.gender.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.gender.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.contact_number.id_for_label }}" class="block text-sm font-medium text-gray-700">Contact Number</label>
+                        <div class="mt-1">
+                            {{ form.contact_number }}
+                        </div>
+                        {% if form.contact_number.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.contact_number.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.family_name.id_for_label }}" class="block text-sm font-medium text-gray-700">Family Name</label>
+                        <div class="mt-1">
+                            {{ form.family_name }}
+                        </div>
+                        {% if form.family_name.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.family_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <div class="flex items-center h-5">
+                            {{ form.head_of_family }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.head_of_family.id_for_label }}" class="font-medium text-gray-700">Head of Family</label>
+                            <p class="text-gray-500">Check if this person is the head of their family</p>
+                        </div>
+                        {% if form.head_of_family.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.head_of_family.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label for="{{ form.special_needs.id_for_label }}" class="block text-sm font-medium text-gray-700">Special Needs or Medical Conditions</label>
+                        <div class="mt-1">
+                            {{ form.special_needs }}
+                        </div>
+                        {% if form.special_needs.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.special_needs.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="hidden">
+                        {{ form.evacuation_center }}
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex items-center justify-end">
+                    <a href="{% url 'evacuation_center_detail' center.id %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded">
+                        Add Evacuee
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -9,7 +9,9 @@ from .models import (
     UserNotification,
     Municipality,
     Barangay,
-    DisasterAlert
+    DisasterAlert,
+    EvacuationCenter,
+    Evacuee
 )
 
 class ReporterProfileAdmin(admin.ModelAdmin):
@@ -54,6 +56,44 @@ class DisasterAlertAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
 
 
+class EvacuationCenterAdmin(admin.ModelAdmin):
+    list_display = ('name', 'barangay', 'capacity', 'current_occupancy', 'status', 'manager')
+    list_filter = ('status', 'barangay__municipality', 'barangay')
+    search_fields = ('name', 'address', 'manager__username', 'barangay__name')
+    date_hierarchy = 'date_created'
+    readonly_fields = ('date_created', 'last_updated')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # If user is not a superuser and is a barangay captain, only show their centers
+        if not request.user.is_superuser:
+            try:
+                profile = request.user.reporterprofile
+                if profile.is_barangay_captain and profile.barangay:
+                    return qs.filter(barangay=profile.barangay)
+            except:
+                pass
+        return qs
+
+
+class EvacueeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'age', 'gender', 'family_name', 'evacuation_center', 'date_admitted', 'date_departed')
+    list_filter = ('gender', 'evacuation_center', 'date_admitted', 'date_departed', 'head_of_family')
+    search_fields = ('name', 'family_name', 'special_needs', 'evacuation_center__name')
+    date_hierarchy = 'date_admitted'
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # If user is not a superuser and is a barangay captain, only show evacuees in their centers
+        if not request.user.is_superuser:
+            try:
+                profile = request.user.reporterprofile
+                if profile.is_barangay_captain and profile.barangay:
+                    return qs.filter(evacuation_center__barangay=profile.barangay)
+            except:
+                pass
+        return qs
+
 
 # Register models
 admin.site.register(DisasterType)
@@ -66,3 +106,5 @@ admin.site.register(UserNotification, UserNotificationAdmin)
 admin.site.register(Municipality, MunicipalityAdmin)
 admin.site.register(Barangay, BarangayAdmin)
 admin.site.register(DisasterAlert, DisasterAlertAdmin)
+admin.site.register(EvacuationCenter, EvacuationCenterAdmin)
+admin.site.register(Evacuee, EvacueeAdmin)

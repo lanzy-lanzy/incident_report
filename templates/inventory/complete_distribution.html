@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Complete Distribution - Incident Report System{% endblock %}
+
+{% block extra_head %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listener to the "Add Beneficiary" button
+        document.getElementById('addBeneficiaryBtn').addEventListener('click', function() {
+            addBeneficiaryRow();
+        });
+
+        // Add event listener to the form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            prepareBeneficiaryData();
+            this.submit();
+        });
+    });
+
+    // Function to add a new beneficiary row
+    function addBeneficiaryRow() {
+        const tableBody = document.getElementById('beneficiaryTableBody');
+        const firstRow = tableBody.querySelector('.beneficiary-row');
+        const newRow = firstRow.cloneNode(true);
+
+        // Clear the input values in the new row
+        newRow.querySelectorAll('input').forEach(input => {
+            if (input.type === 'number') {
+                input.value = '1';
+            } else {
+                input.value = '';
+            }
+        });
+
+        tableBody.appendChild(newRow);
+    }
+
+    // Function to remove a row
+    function removeRow(button) {
+        const tableBody = document.getElementById('beneficiaryTableBody');
+        const row = button.closest('tr');
+
+        // Don't remove if it's the only row
+        if (tableBody.querySelectorAll('tr').length > 1) {
+            tableBody.removeChild(row);
+        }
+    }
+
+    // Function to prepare beneficiary data before form submission
+    function prepareBeneficiaryData() {
+        const beneficiaries = [];
+        const rows = document.querySelectorAll('.beneficiary-row');
+
+        rows.forEach(row => {
+            const nameInput = row.querySelector('input[name="beneficiary_name[]"]');
+            const sizeInput = row.querySelector('input[name="household_size[]"]');
+
+            if (nameInput.value.trim()) {
+                beneficiaries.push({
+                    name: nameInput.value.trim(),
+                    household_size: sizeInput.value
+                });
+            }
+        });
+
+        document.getElementById('beneficiary_list').value = JSON.stringify(beneficiaries);
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900">Complete Distribution</h1>
+                <p class="mt-1 text-sm text-gray-500">Distribute approved resources to recipients</p>
+            </div>
+            <div>
+                <a href="{% url 'distribution_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Back to Distributions
+                </a>
+            </div>
+        </div>
+
+        <!-- Distribution Details -->
+        <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Distribution Details
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    Review the details and enter recipient information to complete the distribution
+                </p>
+            </div>
+            <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Incident</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <a href="{% url 'incident_detail' distribution.incident.id %}" class="text-primary hover:text-blue-900">
+                                {{ distribution.incident.title }}
+                            </a>
+                        </dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Resource Type</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ distribution.distribution_type.name }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Quantity Requested</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ distribution.quantity_requested }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Quantity Approved</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ distribution.quantity_approved }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Current Inventory</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {{ inventory.quantity_available }} {{ distribution.distribution_type.name }} available
+                            {% if inventory.quantity_available < distribution.quantity_approved %}
+                            <span class="text-red-500 font-medium">Insufficient stock!</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                Approved (Pending Distribution)
+                            </span>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Comprehensive Distribution Form -->
+        <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Complete Distribution
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    Enter detailed distribution information to complete the process
+                </p>
+            </div>
+            <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                <form method="post" action="{% url 'complete_distribution' distribution.id %}">
+                    {% csrf_token %}
+                    <div class="space-y-6">
+                        <!-- Recipient Information Section -->
+                        <div>
+                            <h4 class="text-base font-medium text-gray-900 mb-4">Recipient Information</h4>
+                            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                                <div class="sm:col-span-2">
+                                    <label for="recipient_organization" class="block text-sm font-medium text-gray-700">Organization/Community</label>
+                                    <div class="mt-1">
+                                        {% if distribution.incident.reporter.reporterprofile.barangay %}
+                                            <input type="text" name="recipient_organization" id="recipient_organization"
+                                                value="Barangay {{ distribution.incident.reporter.reporterprofile.barangay.name }}"
+                                                class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                                                placeholder="Enter organization or community name">
+                                        {% else %}
+                                            <input type="text" name="recipient_organization" id="recipient_organization"
+                                                value="{% if distribution.incident.barangay %}Barangay {{ distribution.incident.barangay.name }}{% endif %}"
+                                                class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                                                placeholder="Enter organization or community name">
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="sm:col-span-1">
+                                    <label for="recipient_name" class="block text-sm font-medium text-gray-700">Recipient Name <span class="text-red-500">*</span></label>
+                                    <div class="mt-1">
+                                        <input type="text" name="recipient_name" id="recipient_name"
+                                            value="{{ distribution.incident.reporter.get_full_name|default:distribution.incident.reporter.username }}"
+                                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                                            placeholder="Enter recipient's full name" required>
+                                    </div>
+                                </div>
+
+                                <div class="sm:col-span-1">
+                                    <label for="recipient_contact" class="block text-sm font-medium text-gray-700">Contact Information</label>
+                                    <div class="mt-1">
+                                        <input type="text" name="recipient_contact" id="recipient_contact"
+                                            value="{{ distribution.incident.reporter.email }}"
+                                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                                            placeholder="Phone number or email">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Distribution Details Section -->
+                        <div class="pt-5 border-t border-gray-200">
+                            <h4 class="text-base font-medium text-gray-900 mb-4">Distribution Details</h4>
+                            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                                <div class="sm:col-span-1">
+                                    <label for="distributed_by" class="block text-sm font-medium text-gray-700">Distributed By</label>
+                                    <div class="mt-1">
+                                        <input type="text" name="distributed_by" id="distributed_by" value="{{ current_user }}" class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Name of person distributing">
+                                    </div>
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700">Beneficiary List</label>
+                                    <div class="mt-1">
+                                        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                                            <table class="min-w-full divide-y divide-gray-300" id="beneficiaryTable">
+                                                <thead class="bg-gray-50">
+                                                    <tr>
+                                                        <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Beneficiary Name</th>
+                                                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Household Size</th>
+                                                        <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6 w-20">
+                                                            <span class="sr-only">Actions</span>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-gray-200 bg-white" id="beneficiaryTableBody">
+                                                    <tr class="beneficiary-row">
+                                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                                                            <input type="text" name="beneficiary_name[]" class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Enter name">
+                                                        </td>
+                                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                                            <input type="number" name="household_size[]" min="1" value="1" class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                                                        </td>
+                                                        <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                                            <button type="button" class="text-red-600 hover:text-red-900 delete-row" onclick="removeRow(this)">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                                </svg>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="mt-2">
+                                            <button type="button" id="addBeneficiaryBtn" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="-ml-0.5 mr-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                                                </svg>
+                                                Add Beneficiary
+                                            </button>
+                                        </div>
+                                        <!-- Hidden field to store the JSON data -->
+                                        <input type="hidden" name="beneficiary_list" id="beneficiary_list">
+                                    </div>
+                                    <p class="mt-2 text-sm text-gray-500">
+                                        Add the names of affected families or constituents who will receive these resources.
+                                    </p>
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label for="distribution_notes" class="block text-sm font-medium text-gray-700">Distribution Notes</label>
+                                    <div class="mt-1">
+                                        <textarea name="distribution_notes" id="distribution_notes" rows="3" class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Additional notes about the distribution (optional)"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Confirmation Section -->
+                        <div class="pt-5 border-t border-gray-200">
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="confirm_distribution" name="confirm_distribution" type="checkbox" required class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="confirm_distribution" class="font-medium text-gray-700">I confirm that {{ distribution.quantity_approved }} {{ distribution.distribution_type.name }} will be distributed to the recipient</label>
+                                    <p class="text-gray-500">This action will deduct the approved quantity from inventory</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <a href="{% url 'distribution_list' %}" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                Complete Distribution
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
