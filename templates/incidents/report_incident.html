@@ -40,10 +40,26 @@
                         {% endif %}
                     </div>
 
-                    <!-- Location -->
+                    <!-- Barangay Selection -->
+                    <div>
+                        <label for="{{ form.barangay.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Barangay
+                        </label>
+                        {{ form.barangay }}
+                        {% if form.barangay.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.barangay.errors.0 }}
+                        </p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">
+                            Select the barangay in Tambulig where the incident occurred
+                        </p>
+                    </div>
+
+                    <!-- Additional Location Details -->
                     <div>
                         <label for="{{ form.location.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Location
+                            Additional Location Details (Optional)
                         </label>
                         {{ form.location }}
                         {% if form.location.errors %}
@@ -51,6 +67,9 @@
                             {{ form.location.errors.0 }}
                         </p>
                         {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">
+                            Provide more specific details about the location (e.g., street name, landmark)
+                        </p>
                     </div>
 
                     <!-- Description -->

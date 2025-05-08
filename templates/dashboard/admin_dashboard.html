@@ -305,14 +305,38 @@
                                             {{ incident.disaster_type.name }}
                                         </p>
                                     </div>
-                                    {% if not incident.is_verified %}
-                                    <div class="mt-2 sm:mt-0">
+                                    {% if incident.status == 'pending' %}
+                                    <div class="mt-2 sm:mt-0 flex space-x-2">
                                         <a href="{% url 'verify_incident' incident.id %}" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
                                             <svg class="mr-1.5 -ml-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                             </svg>
-                                            Verify Now
+                                            Verify
                                         </a>
+                                        <a href="{% url 'deny_incident' incident.id %}" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                                            <svg class="mr-1.5 -ml-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Deny
+                                        </a>
+                                    </div>
+                                    {% elif incident.status == 'verified' %}
+                                    <div class="mt-2 sm:mt-0">
+                                        <span class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md bg-green-100 text-green-800">
+                                            <svg class="mr-1.5 -ml-0.5 h-4 w-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Verified
+                                        </span>
+                                    </div>
+                                    {% elif incident.status == 'denied' %}
+                                    <div class="mt-2 sm:mt-0">
+                                        <span class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md bg-red-100 text-red-800">
+                                            <svg class="mr-1.5 -ml-0.5 h-4 w-4 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Denied
+                                        </span>
                                     </div>
                                     {% endif %}
                                 </div>

@@ -18,6 +18,9 @@
                 <!-- Notifications dropdown for staff -->
                 {% include 'components/notifications.html' %}
 
+                <!-- Notifications dropdown for regular users -->
+                {% include 'components/user_notifications.html' %}
+
                 <!-- User dropdown if logged in -->
                 {% if user.is_authenticated %}
                 <div class="ml-3 relative" x-data="{ open: false }">

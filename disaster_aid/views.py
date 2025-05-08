@@ -7,11 +7,11 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from .forms import (
     LoginForm, RegisterForm, IncidentReportForm,
-    DistributionRequestForm, InventoryForm
+    DistributionRequestForm, InventoryForm, DenyIncidentForm
 )
 from .models import (
     IncidentReport, DisasterType, DistributionType,
-    Inventory, IncidentDistribution
+    Inventory, IncidentDistribution, UserNotification
 )
 
 def home(request):
@@ -219,6 +219,9 @@ def incident_detail(request, incident_id):
     # Get distributions for this incident
     distributions = IncidentDistribution.objects.filter(incident=incident)
 
+    # Get inventory information for each distribution type
+    inventories = {inv.item_id: inv.quantity_available for inv in Inventory.objects.all()}
+
     # Handle distribution request form
     if request.method == 'POST':
         form = DistributionRequestForm(request.POST)
@@ -245,6 +248,7 @@ def incident_detail(request, incident_id):
         'incident': incident,
         'distributions': distributions,
         'form': form,
+        'inventories': inventories,
     }
 
     return render(request, 'incidents/incident_detail.html', context)
@@ -290,6 +294,7 @@ def admin_dashboard(request):
 
     return render(request, 'dashboard/admin_dashboard.html', context)
 
+
 @login_required
 def verify_incident(request, incident_id):
     if not request.user.is_staff:
@@ -297,11 +302,60 @@ def verify_incident(request, incident_id):
         return redirect('dashboard')
 
     incident = get_object_or_404(IncidentReport, id=incident_id)
-    incident.is_verified = True
-    incident.save()
+    incident.verify()
+
+    # Create notification for the incident reporter
+    UserNotification.objects.create(
+        user=incident.reporter,
+        notification_type='incident_verified',
+        title='Incident Verified',
+        message=f'Your incident report "{incident.title}" has been verified by our team.',
+        incident=incident
+    )
 
     messages.success(request, f"Incident '{incident.title}' has been verified.")
     return redirect('admin_dashboard')
+
+
+@login_required
+def deny_incident(request, incident_id):
+    if not request.user.is_staff:
+        messages.error(request, "You are not authorized to deny incidents.")
+        return redirect('dashboard')
+
+    incident = get_object_or_404(IncidentReport, id=incident_id)
+
+    if incident.status == 'verified':
+        messages.error(request, "Cannot deny an incident that has already been verified.")
+        return redirect('incident_detail', incident_id=incident.id)
+
+    if request.method == 'POST':
+        form = DenyIncidentForm(request.POST)
+        if form.is_valid():
+            denial_reason = form.cleaned_data['denial_reason']
+            incident.deny(denial_reason)
+
+            # Create notification for the incident reporter
+            UserNotification.objects.create(
+                user=incident.reporter,
+                notification_type='incident_denied',
+                title='Incident Denied',
+                message=f'Your incident report "{incident.title}" has been denied. Reason: {denial_reason}',
+                incident=incident
+            )
+
+            messages.success(request, f"Incident '{incident.title}' has been denied.")
+            return redirect('admin_dashboard')
+    else:
+        form = DenyIncidentForm()
+
+    context = {
+        'incident': incident,
+        'form': form,
+    }
+
+    return render(request, 'incidents/deny_incident.html', context)
+
 
 # Inventory Management Views
 @login_required
@@ -339,9 +393,17 @@ def update_inventory(request, inventory_id):
     else:
         form = InventoryForm(instance=inventory)
 
+    # Get pending distributions for this inventory item
+    pending_distributions = IncidentDistribution.objects.filter(
+        distribution_type=inventory.item,
+        is_fulfilled=False
+    )
+
     context = {
         'form': form,
         'inventory': inventory,
+        'pending_distributions': pending_distributions,
+        'has_pending': pending_distributions.exists()
     }
 
     return render(request, 'inventory/update_inventory.html', context)
@@ -358,6 +420,9 @@ def distribution_list(request):
     total_count = distributions.count()
     fulfilled_count = distributions.filter(is_fulfilled=True).count()
     pending_count = total_count - fulfilled_count
+
+    # Get inventory information for each distribution type
+    inventories = {inv.item_id: inv.quantity_available for inv in Inventory.objects.all()}
 
     # Filter by status if provided
     status = request.GET.get('status')
@@ -377,6 +442,7 @@ def distribution_list(request):
         'total_count': total_count,
         'fulfilled_count': fulfilled_count,
         'pending_count': pending_count,
+        'inventories': inventories,
     }
 
     return render(request, 'inventory/distribution_list.html', context)
@@ -401,3 +467,12 @@ def approve_distribution(request, distribution_id):
 def recent_incidents_api(request):
     recent_incidents = IncidentReport.objects.filter(is_verified=True).order_by('-date_reported')[:3]
     return render(request, 'api/recent_incidents.html', {'incidents': recent_incidents})
+
+@login_required
+def mark_notification_read(request, notification_id):
+    notification = get_object_or_404(UserNotification, id=notification_id, user=request.user)
+    notification.mark_as_read()
+
+    # Redirect back to the referring page or dashboard
+    next_url = request.GET.get('next', 'dashboard')
+    return redirect(next_url)

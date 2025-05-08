@@ -5,7 +5,10 @@ from .models import (
     Inventory,
     ReporterProfile,
     IncidentReport,
-    IncidentDistribution
+    IncidentDistribution,
+    UserNotification,
+    Municipality,
+    Barangay
 )
 
 class ReporterProfileAdmin(admin.ModelAdmin):
@@ -13,9 +16,9 @@ class ReporterProfileAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__email')
 
 class IncidentReportAdmin(admin.ModelAdmin):
-    list_display = ('title', 'location', 'disaster_type', 'reporter', 'date_reported', 'is_verified')
-    list_filter = ('disaster_type', 'is_verified', 'date_reported')
-    search_fields = ('title', 'description', 'location', 'reporter__username')
+    list_display = ('title', 'barangay', 'location', 'disaster_type', 'reporter', 'date_reported', 'is_verified')
+    list_filter = ('disaster_type', 'is_verified', 'date_reported', 'barangay__municipality')
+    search_fields = ('title', 'description', 'location', 'reporter__username', 'barangay__name')
     date_hierarchy = 'date_reported'
 
 class IncidentDistributionAdmin(admin.ModelAdmin):
@@ -27,6 +30,23 @@ class InventoryAdmin(admin.ModelAdmin):
     list_display = ('item', 'quantity_available')
     search_fields = ('item__name',)
 
+class UserNotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'notification_type', 'title', 'created_at', 'is_read')
+    list_filter = ('notification_type', 'is_read', 'created_at')
+    search_fields = ('user__username', 'title', 'message')
+    date_hierarchy = 'created_at'
+
+class MunicipalityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'psgc_code')
+    search_fields = ('name', 'psgc_code')
+
+class BarangayAdmin(admin.ModelAdmin):
+    list_display = ('name', 'municipality', 'psgc_code')
+    list_filter = ('municipality',)
+    search_fields = ('name', 'psgc_code')
+
+
+
 # Register models
 admin.site.register(DisasterType)
 admin.site.register(DistributionType)
@@ -34,3 +54,6 @@ admin.site.register(Inventory, InventoryAdmin)
 admin.site.register(ReporterProfile, ReporterProfileAdmin)
 admin.site.register(IncidentReport, IncidentReportAdmin)
 admin.site.register(IncidentDistribution, IncidentDistributionAdmin)
+admin.site.register(UserNotification, UserNotificationAdmin)
+admin.site.register(Municipality, MunicipalityAdmin)
+admin.site.register(Barangay, BarangayAdmin)

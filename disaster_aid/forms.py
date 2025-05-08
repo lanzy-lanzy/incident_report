@@ -1,7 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
-from .models import ReporterProfile, IncidentReport, DisasterType, IncidentDistribution, DistributionType, Inventory
+from .models import (
+    ReporterProfile, IncidentReport, DisasterType, IncidentDistribution,
+    DistributionType, Inventory, Municipality, Barangay
+)
 
 # Common form field styling
 INPUT_CLASSES = 'w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
@@ -129,11 +132,23 @@ class IncidentReportForm(forms.ModelForm):
             }
         )
     )
+    # Keep the location field for backward compatibility but make it optional
     location = forms.CharField(
+        required=False,
         widget=forms.TextInput(
             attrs={
                 'class': INPUT_CLASSES,
-                'placeholder': 'Location of the incident',
+                'placeholder': 'Additional location details (optional)',
+            }
+        )
+    )
+    # Add barangay field
+    barangay = forms.ModelChoiceField(
+        queryset=Barangay.objects.filter(municipality__name='Tambulig').order_by('name'),
+        empty_label="Select Barangay",
+        widget=forms.Select(
+            attrs={
+                'class': INPUT_CLASSES,
             }
         )
     )
@@ -189,7 +204,7 @@ class IncidentReportForm(forms.ModelForm):
 
     class Meta:
         model = IncidentReport
-        fields = ['title', 'description', 'location', 'disaster_type', 'needs_resources', 'photo_1', 'photo_2', 'photo_3']
+        fields = ['title', 'description', 'barangay', 'location', 'disaster_type', 'needs_resources', 'photo_1', 'photo_2', 'photo_3']
 
 class DistributionRequestForm(forms.ModelForm):
     distribution_type = forms.ModelChoiceField(
@@ -253,3 +268,17 @@ class InventoryForm(forms.ModelForm):
     class Meta:
         model = Inventory
         fields = ['quantity_available']
+
+
+class DenyIncidentForm(forms.Form):
+    denial_reason = forms.CharField(
+        widget=forms.Textarea(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Please provide a reason for denying this incident report',
+                'rows': 3,
+            }
+        ),
+        required=True,
+        help_text='This reason will be shared with the reporter to explain why their incident was denied.'
+    )

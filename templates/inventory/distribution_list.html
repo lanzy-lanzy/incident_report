@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Distribution Management - Incident Report System{% endblock %}
 
@@ -111,6 +112,16 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">
                                     {{ distribution.quantity_requested }}
+                                    {% if not distribution.is_fulfilled %}
+                                    <span class="ml-2 text-xs text-gray-500">
+                                        (Available: {{ inventories|get_item:distribution.distribution_type.id|default:"0" }})
+                                    </span>
+                                    {% if inventories|get_item:distribution.distribution_type.id < distribution.quantity_requested %}
+                                    <span class="ml-1 text-xs text-red-500">
+                                        Insufficient stock!
+                                    </span>
+                                    {% endif %}
+                                    {% endif %}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -131,12 +142,21 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 {% if not distribution.is_fulfilled %}
-                                <a href="{% url 'approve_distribution' distribution.id %}" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                    <svg class="mr-1.5 -ml-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Approve & Distribute
-                                </a>
+                                    {% if inventories|get_item:distribution.distribution_type.id >= distribution.quantity_requested %}
+                                    <a href="{% url 'approve_distribution' distribution.id %}" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        <svg class="mr-1.5 -ml-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Approve & Distribute
+                                    </a>
+                                    {% else %}
+                                    <span class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-gray-500 bg-gray-100 cursor-not-allowed" title="Insufficient inventory">
+                                        <svg class="mr-1.5 -ml-0.5 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Insufficient Stock
+                                    </span>
+                                    {% endif %}
                                 {% else %}
                                 <span class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-green-700 bg-green-100">
                                     <svg class="mr-1.5 -ml-0.5 h-4 w-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,0 +1,116 @@
+{% if user.is_authenticated and not user.is_staff %}
+<div class="ml-3 relative" x-data="{ open: false }">
+    <div>
+        <button @click="open = !open" class="user-notification-button p-1 rounded-full text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white relative">
+            <span class="sr-only">View notifications</span>
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            {% if has_user_notifications %}
+            <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-blue-600"></span>
+            {% endif %}
+        </button>
+    </div>
+
+    <div x-show="open"
+         @click.away="open = false"
+         x-transition:enter="transition ease-out duration-100"
+         x-transition:enter-start="transform opacity-0 scale-95"
+         x-transition:enter-end="transform opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-75"
+         x-transition:leave-start="transform opacity-100 scale-100"
+         x-transition:leave-end="transform opacity-0 scale-95"
+         class="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50"
+         x-cloak>
+
+        <div class="px-4 py-2 border-b border-gray-200">
+            <h3 class="text-sm font-medium text-gray-900">Your Notifications</h3>
+            {% if unread_user_notifications_count > 0 %}
+            <p class="text-xs text-gray-500 mt-1">
+                You have {{ unread_user_notifications_count }} unread notification{{ unread_user_notifications_count|pluralize }}
+            </p>
+            {% else %}
+            <p class="text-xs text-gray-500 mt-1">
+                No new notifications
+            </p>
+            {% endif %}
+        </div>
+
+        <div class="max-h-60 overflow-y-auto">
+            {% for notification in user_notifications %}
+            <div class="block px-4 py-2 hover:bg-gray-100 border-b border-gray-100">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 mt-0.5">
+                        {% if notification.notification_type == 'incident_verified' %}
+                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100">
+                            <svg class="h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </span>
+                        {% elif notification.notification_type == 'incident_denied' %}
+                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-red-100">
+                            <svg class="h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </span>
+                        {% elif notification.notification_type == 'resource_approved' %}
+                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
+                            <svg class="h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </span>
+                        {% elif notification.notification_type == 'resource_fulfilled' %}
+                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-purple-100">
+                            <svg class="h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100">
+                            <svg class="h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="ml-3 w-0 flex-1">
+                        <p class="text-sm font-medium text-gray-900">
+                            {{ notification.title }}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            {{ notification.message }}
+                        </p>
+                        <p class="text-xs text-gray-400 mt-1">
+                            {{ notification.created_at|date:"M d, H:i" }}
+                        </p>
+                    </div>
+                    <div class="ml-3 flex-shrink-0 flex space-x-1">
+                        {% if not notification.is_read %}
+                        <a href="{% url 'mark_notification_read' notification.id %}?next={{ request.path }}" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            Mark Read
+                        </a>
+                        {% endif %}
+
+                        {% if notification.incident %}
+                        <a href="{% url 'incident_detail' notification.incident.id %}" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            View
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="px-4 py-6 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No notifications</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    You don't have any notifications yet.
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}

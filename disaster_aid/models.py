@@ -1,5 +1,31 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+
+
+# Location models for PSGC-based locations
+class Municipality(models.Model):
+    name = models.CharField(max_length=100)
+    psgc_code = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Municipalities"
+
+
+class Barangay(models.Model):
+    name = models.CharField(max_length=100)
+    psgc_code = models.CharField(max_length=20, unique=True)
+    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name='barangays')
+
+    def __str__(self):
+        return f"{self.name}, {self.municipality.name}"
+
+    class Meta:
+        verbose_name_plural = "Barangays"
+        ordering = ['name']
 
 
 # Types of disasters (e.g., Earthquake, Flood)
@@ -38,20 +64,30 @@ class ReporterProfile(models.Model):
 
 # Reported incidents
 class IncidentReport(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('verified', 'Verified'),
+        ('denied', 'Denied'),
+    )
+
     reporter = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField()
     disaster_type = models.ForeignKey(DisasterType, on_delete=models.SET_NULL, null=True)
-    location = models.CharField(max_length=255)
+    location = models.CharField(max_length=255, blank=True, null=True)  # Keeping for backward compatibility
+    barangay = models.ForeignKey(Barangay, on_delete=models.SET_NULL, null=True, blank=True, related_name='incidents')
     date_reported = models.DateTimeField(auto_now_add=True)
-    is_verified = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    is_verified = models.BooleanField(default=False)  # Keeping for backward compatibility
+    denial_reason = models.TextField(null=True, blank=True)
     needs_resources = models.BooleanField(default=False)
     photo_1 = models.ImageField(upload_to='incident_photos/', null=True, blank=True)
     photo_2 = models.ImageField(upload_to='incident_photos/', null=True, blank=True)
     photo_3 = models.ImageField(upload_to='incident_photos/', null=True, blank=True)
 
     def __str__(self):
-        return f"{self.title} - {self.location}"
+        location_str = self.barangay if self.barangay else self.location
+        return f"{self.title} - {location_str}"
 
     @property
     def has_photos(self):
@@ -68,6 +104,27 @@ class IncidentReport(models.Model):
         if self.photo_3:
             photos.append(self.photo_3)
         return photos
+
+    def save(self, *args, **kwargs):
+        """Override save to maintain backward compatibility with is_verified field"""
+        if self.status == 'verified' and not self.is_verified:
+            self.is_verified = True
+        elif self.status != 'verified' and self.is_verified:
+            self.is_verified = False
+        super().save(*args, **kwargs)
+
+    def verify(self):
+        """Mark the incident as verified"""
+        self.status = 'verified'
+        self.is_verified = True
+        self.save()
+
+    def deny(self, reason):
+        """Mark the incident as denied with a reason"""
+        self.status = 'denied'
+        self.is_verified = False
+        self.denial_reason = reason
+        self.save()
 
 
 # Distributions linked to incidents, based on inventory
@@ -93,5 +150,44 @@ class IncidentDistribution(models.Model):
             inventory.save()
             self.is_fulfilled = True
             self.save()
+
+            # Create notification for the incident reporter
+            from .models import UserNotification
+            UserNotification.objects.create(
+                user=self.incident.reporter,
+                notification_type='resource_approved',
+                title='Resource Request Approved',
+                message=f'Your request for {quantity} {self.distribution_type.name} has been approved and distributed.',
+                incident=self.incident
+            )
         else:
-            raise ValueError("Not enough stock in inventory.")
+            raise ValueError(f"Not enough {self.distribution_type.name} in stock. Available: {inventory.quantity_available}, Requested: {quantity}")
+
+
+# User notifications
+class UserNotification(models.Model):
+    NOTIFICATION_TYPES = (
+        ('incident_verified', 'Incident Verified'),
+        ('incident_denied', 'Incident Denied'),
+        ('resource_approved', 'Resource Request Approved'),
+        ('resource_fulfilled', 'Resource Request Fulfilled'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField(max_length=50, choices=NOTIFICATION_TYPES)
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    incident = models.ForeignKey(IncidentReport, on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.notification_type} for {self.user.username}"
+
+    def mark_as_read(self):
+        """Mark the notification as read"""
+        self.is_read = True
+        self.save()

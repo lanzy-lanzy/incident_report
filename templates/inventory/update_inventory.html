@@ -13,7 +13,7 @@
                 </a>
             </div>
         </div>
-        
+
         <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-gray-50">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">
@@ -38,7 +38,7 @@
                                 Enter the current available quantity of {{ inventory.item.name }}.
                             </p>
                         </div>
-                        
+
                         <div class="flex justify-end">
                             <a href="{% url 'inventory_list' %}" class="mr-4 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                                 Cancel
@@ -51,7 +51,7 @@
                 </form>
             </div>
         </div>
-        
+
         <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-gray-50">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">
@@ -63,10 +63,9 @@
                     <p class="text-sm text-gray-500">
                         The following distribution requests are currently pending for {{ inventory.item.name }}:
                     </p>
-                    
+
                     <div class="mt-4">
-                        {% with pending_distributions=inventory.item.incidentdistribution_set.filter.is_fulfilled=False %}
-                        {% if pending_distributions %}
+                        {% if has_pending %}
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -108,7 +107,6 @@
                             There are no pending distribution requests for {{ inventory.item.name }}.
                         </p>
                         {% endif %}
-                        {% endwith %}
                     </div>
                 </div>
             </div>
