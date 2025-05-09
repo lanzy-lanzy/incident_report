@@ -59,6 +59,7 @@ class ReporterProfile(models.Model):
     profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
     barangay = models.ForeignKey(Barangay, on_delete=models.SET_NULL, null=True, blank=True)
     is_barangay_captain = models.BooleanField(default=False, help_text="Designates whether this user is a barangay captain")
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
 
     def __str__(self):
         if self.barangay:

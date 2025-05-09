@@ -179,6 +179,15 @@
                         {{ form.username }}
                     </div>
 
+                    <!-- Phone Number -->
+                    <div class="space-y-2">
+                        <label for="id_phone_number" class="block text-sm font-medium text-gray-700">Phone Number <span class="text-red-500">*</span></label>
+                        {{ form.phone_number }}
+                        <p class="mt-1 text-sm text-gray-500">
+                            Enter your contact number for emergency communications
+                        </p>
+                    </div>
+
                     <!-- Hidden Email Field -->
                     <div style="display: none;">
                         {{ form.email }}

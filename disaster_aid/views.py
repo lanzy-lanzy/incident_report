@@ -120,6 +120,12 @@ def report_incident(request):
     # Get available resource types for the form
     resource_types = DistributionType.objects.filter(inventory__quantity_available__gt=0)
 
+    # Print out all disaster types for debugging
+    disaster_types = DisasterType.objects.all()
+    print("Available disaster types:")
+    for dt in disaster_types:
+        print(f"- {dt.id}: {dt.name}")
+
     if request.method == 'POST':
         form = IncidentReportForm(request.POST, request.FILES)
         if form.is_valid():

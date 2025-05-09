@@ -122,6 +122,17 @@ class RegisterForm(UserCreationForm):
         )
     )
 
+    phone_number = forms.CharField(
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Phone Number',
+            }
+        )
+    )
+
     # No checkbox needed - all registered users with a barangay are automatically barangay captains
 
     class Meta:
@@ -206,10 +217,11 @@ class RegisterForm(UserCreationForm):
                 user.save()
                 print(f"DEBUG - User saved with ID: {user.id}")
 
-                # Create the user profile with the profile image and barangay
+                # Create the user profile with the profile image, barangay, and phone number
                 profile_image = self.cleaned_data.get('profile_image')
+                phone_number = self.cleaned_data.get('phone_number')
 
-                print(f"DEBUG - Creating profile with barangay: {barangay}")
+                print(f"DEBUG - Creating profile with barangay: {barangay} and phone number: {phone_number}")
 
                 # All registered users with a barangay are automatically barangay captains
 
@@ -218,6 +230,7 @@ class RegisterForm(UserCreationForm):
                     user=user,
                     profile_image=profile_image,
                     barangay=barangay,
+                    phone_number=phone_number,
                     is_barangay_captain=True  # Automatically set as barangay captain
                 )
                 print(f"DEBUG - Profile created with ID: {profile.id}")

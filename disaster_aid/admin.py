@@ -15,8 +15,9 @@ from .models import (
 )
 
 class ReporterProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'profile_image')
-    search_fields = ('user__username', 'user__email')
+    list_display = ('user', 'profile_image', 'phone_number', 'barangay', 'is_barangay_captain')
+    search_fields = ('user__username', 'user__email', 'phone_number')
+    list_filter = ('is_barangay_captain', 'barangay')
 
 class IncidentReportAdmin(admin.ModelAdmin):
     list_display = ('title', 'barangay', 'location', 'disaster_type', 'reporter', 'date_reported', 'is_verified')
