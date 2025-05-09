@@ -50,17 +50,7 @@ class RegisterForm(UserCreationForm):
             }
         )
     )
-    email = forms.EmailField(
-        max_length=254,
-        required=False,  # Not required since we'll generate it
-        widget=forms.EmailInput(
-            attrs={
-                'class': INPUT_CLASSES,
-                'placeholder': 'Email Address',
-                'style': 'display: none;',  # Hide the original email field
-            }
-        )
-    )
+    # Email field removed to avoid errors
     barangay = forms.ModelChoiceField(
         queryset=Barangay.objects.filter(municipality__name='Tambulig').order_by('name'),
         empty_label="-- Select Your Barangay --",
@@ -78,8 +68,6 @@ class RegisterForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         # Make sure the barangay field is required
         self.fields['barangay'].required = True
-        # Make sure the email field is not required in the form (we'll generate it)
-        self.fields['email'].required = False
         print(f"DEBUG - Form initialized with fields: {self.fields.keys()}")
 
         # Check if data was provided
@@ -137,7 +125,7 @@ class RegisterForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2')
+        fields = ('username', 'first_name', 'last_name', 'password1', 'password2')
 
     # We need to handle the barangay field separately since it's not part of the User model
 
@@ -156,13 +144,6 @@ class RegisterForm(UserCreationForm):
                 raise ValidationError({
                     'barangay': 'Please select your barangay address. This is required for registration.'
                 })
-
-            # Generate a placeholder email using the barangay name and username for uniqueness
-            username = cleaned_data.get('username', '').lower()
-            barangay_name = barangay.name.lower().replace(' ', '_')
-            email = f"{username}_{barangay_name}@example.com"
-            cleaned_data['email'] = email
-            print(f"DEBUG - Generated email: {email} for barangay: {barangay.name}")
 
         return cleaned_data
 
@@ -195,20 +176,14 @@ class RegisterForm(UserCreationForm):
                 print("DEBUG - No barangay selected, cannot proceed")
                 raise ValueError("Please select your barangay address")
 
-            # Generate a placeholder email using the barangay name
-            email = f"{barangay.name.lower().replace(' ', '_')}@example.com"
-            # Make sure email is in cleaned_data
-            self.cleaned_data['email'] = email
-            print(f"DEBUG - Generated email: {email}")
-
             # Save the user
             user = super().save(commit=False)
             print(f"DEBUG - User object created: {user.username}")
 
             user.first_name = self.cleaned_data.get('first_name', '')
             user.last_name = self.cleaned_data.get('last_name', '')
-            # Set the email directly on the user object
-            user.email = email
+            # Set a placeholder email directly on the user object
+            user.email = f"{user.username}_{barangay.name.lower().replace(' ', '_')}@example.com"
 
             print(f"DEBUG - User object before save: {user.username}, {user.email}, {user.first_name}, {user.last_name}")
 
