@@ -130,7 +130,7 @@ def report_incident(request):
             # Handle "Others" disaster type
             if incident.disaster_type and incident.disaster_type.name == 'Others':
                 # Keep the disaster_type as "Others" but also store the specific type
-                incident.other_disaster_type = form.cleaned_data['other_disaster_type']
+                incident.other_disaster_type = form.cleaned_data.get('other_disaster_type', '')
 
             incident.save()
 
@@ -148,6 +148,7 @@ def report_incident(request):
                 while True:
                     resource_type_id = request.POST.get(f'resource_type_{resource_count}')
                     quantity = request.POST.get(f'quantity_{resource_count}')
+                    other_resource_type = request.POST.get(f'other_resource_type_{resource_count}')
 
                     if not resource_type_id or not quantity:
                         # No more resources to process
@@ -157,25 +158,42 @@ def report_incident(request):
                         break
 
                     try:
-                        resource_type = DistributionType.objects.get(id=resource_type_id)
                         quantity = int(quantity)
-
                         if quantity <= 0:
-                            messages.warning(request, f"Invalid quantity for {resource_type.name}. Must be greater than 0.")
+                            messages.warning(request, "Quantity must be greater than 0.")
                             continue
 
-                        # Check if there's enough inventory
-                        inventory = Inventory.objects.get(item=resource_type)
-                        if inventory.quantity_available >= quantity:
-                            # Create the distribution request
-                            IncidentDistribution.objects.create(
+                        # Handle "Others" resource type
+                        if resource_type_id == 'others':
+                            if not other_resource_type:
+                                messages.warning(request, "Please specify the other resource type.")
+                                continue
+
+                            # Create a new distribution request with notes
+                            distribution = IncidentDistribution.objects.create(
                                 incident=incident,
-                                distribution_type=resource_type,
-                                quantity_requested=quantity
+                                distribution_type=None,  # No specific distribution type
+                                quantity_requested=quantity,
+                                distribution_notes=f"Other resource type: {other_resource_type}"
                             )
                             has_resources = True
+                            messages.info(request, f"Your request for '{other_resource_type}' has been recorded and will be reviewed.")
                         else:
-                            messages.warning(request, f"Not enough {resource_type.name} in inventory. Available: {inventory.quantity_available}")
+                            # Regular resource type
+                            resource_type = DistributionType.objects.get(id=resource_type_id)
+
+                            # Check if there's enough inventory
+                            inventory = Inventory.objects.get(item=resource_type)
+                            if inventory.quantity_available >= quantity:
+                                # Create the distribution request
+                                IncidentDistribution.objects.create(
+                                    incident=incident,
+                                    distribution_type=resource_type,
+                                    quantity_requested=quantity
+                                )
+                                has_resources = True
+                            else:
+                                messages.warning(request, f"Not enough {resource_type.name} in inventory. Available: {inventory.quantity_available}")
                     except (DistributionType.DoesNotExist, Inventory.DoesNotExist, ValueError):
                         messages.warning(request, f"Invalid resource request at position {resource_count}.")
 

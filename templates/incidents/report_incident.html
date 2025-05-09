@@ -201,11 +201,12 @@
                                     <label class="block text-sm font-medium text-gray-700">
                                         Resource Type
                                     </label>
-                                    <select name="resource_type_1" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                    <select name="resource_type_1" id="resource_type_1" class="resource-type-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
                                         <option value="">Select Resource Type</option>
                                         {% for resource in resource_types %}
                                         <option value="{{ resource.id }}">{{ resource.name }}</option>
                                         {% endfor %}
+                                        <option value="others">Others (please specify)</option>
                                     </select>
                                 </div>
 
@@ -215,6 +216,17 @@
                                     </label>
                                     <input type="number" name="quantity_1" min="1" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Quantity">
                                 </div>
+                            </div>
+
+                            <!-- Other Resource Type (hidden by default) -->
+                            <div id="other-resource-type-container-1" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    Please Specify Resource Type
+                                </label>
+                                <input type="text" name="other_resource_type_1" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Please specify the resource type">
+                                <p class="mt-1 text-sm text-gray-500">
+                                    Please provide details about the type of resource needed
+                                </p>
                             </div>
 
                             <div id="additional-resources"></div>
@@ -291,6 +303,8 @@
             const selectedOption = disasterTypeSelect.options[disasterTypeSelect.selectedIndex];
             const selectedText = selectedOption ? selectedOption.text : '';
 
+            console.log('Selected disaster type:', selectedText);
+
             if (selectedText === 'Others') {
                 otherDisasterTypeContainer.classList.remove('hidden');
                 document.getElementById('id_other_disaster_type').setAttribute('required', 'required');
@@ -321,11 +335,12 @@
                     <label class="block text-sm font-medium text-gray-700">
                         Resource Type
                     </label>
-                    <select name="resource_type_${resourceCount}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                    <select name="resource_type_${resourceCount}" id="resource_type_${resourceCount}" class="resource-type-select mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
                         <option value="">Select Resource Type</option>
                         {% for resource in resource_types %}
                         <option value="{{ resource.id }}">{{ resource.name }}</option>
                         {% endfor %}
+                        <option value="others">Others (please specify)</option>
                     </select>
                 </div>
 
@@ -345,13 +360,78 @@
                 </div>
             `;
 
+            // Add the other resource type container
+            const otherResourceContainer = document.createElement('div');
+            otherResourceContainer.id = `other-resource-type-container-${resourceCount}`;
+            otherResourceContainer.className = 'hidden mt-4';
+            otherResourceContainer.innerHTML = `
+                <label class="block text-sm font-medium text-gray-700">
+                    Please Specify Resource Type
+                </label>
+                <input type="text" name="other_resource_type_${resourceCount}" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Please specify the resource type">
+                <p class="mt-1 text-sm text-gray-500">
+                    Please provide details about the type of resource needed
+                </p>
+            `;
+
             additionalResourcesDiv.appendChild(newResourceFields);
+            additionalResourcesDiv.appendChild(otherResourceContainer);
 
             // Add event listener to remove button
             newResourceFields.querySelector('.remove-resource').addEventListener('click', function() {
                 additionalResourcesDiv.removeChild(newResourceFields);
+                if (document.getElementById(`other-resource-type-container-${resourceCount}`)) {
+                    additionalResourcesDiv.removeChild(otherResourceContainer);
+                }
+            });
+
+            // Add event listener to toggle other resource type field
+            const resourceTypeSelect = document.getElementById(`resource_type_${resourceCount}`);
+            resourceTypeSelect.addEventListener('change', function() {
+                toggleOtherResourceType(resourceCount);
             });
         });
+
+        // Function to toggle other resource type field visibility
+        function toggleOtherResourceType(index) {
+            const resourceTypeSelect = document.getElementById(`resource_type_${index}`);
+            const otherResourceTypeContainer = document.getElementById(`other-resource-type-container-${index}`);
+
+            if (!resourceTypeSelect || !otherResourceTypeContainer) return;
+
+            const selectedValue = resourceTypeSelect.value;
+
+            if (selectedValue === 'others') {
+                otherResourceTypeContainer.classList.remove('hidden');
+                const otherResourceTypeInput = otherResourceTypeContainer.querySelector(`input[name="other_resource_type_${index}"]`);
+                if (otherResourceTypeInput) {
+                    otherResourceTypeInput.setAttribute('required', 'required');
+                }
+            } else {
+                otherResourceTypeContainer.classList.add('hidden');
+                const otherResourceTypeInput = otherResourceTypeContainer.querySelector(`input[name="other_resource_type_${index}"]`);
+                if (otherResourceTypeInput) {
+                    otherResourceTypeInput.removeAttribute('required');
+                }
+            }
+        }
+
+        // Add event listener to the first resource type select
+        const firstResourceSelect = document.getElementById('resource_type_1');
+        if (firstResourceSelect) {
+            console.log('First resource select found:', firstResourceSelect);
+            console.log('Options:', Array.from(firstResourceSelect.options).map(opt => `${opt.value}: ${opt.text}`));
+
+            firstResourceSelect.addEventListener('change', function() {
+                console.log('Resource type changed to:', this.value);
+                toggleOtherResourceType(1);
+            });
+
+            // Initial check for the first resource type
+            toggleOtherResourceType(1);
+        } else {
+            console.error('Could not find resource_type_1 element');
+        }
     });
 </script>
 {% endblock %}
