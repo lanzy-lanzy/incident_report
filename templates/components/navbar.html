@@ -8,7 +8,7 @@
                         <img src="/static/logo/mdrrmc_logo.png" alt="MDRRMC Logo" class="h-10 w-auto">
                         <img src="/static/logo/lgu_logo.png" alt="LGU Logo" class="h-10 w-auto">
                     </div>
-                    <a href="{% url 'home' %}" class="font-bold text-xl">Incident Report</a>
+                    <a href="{% url 'home' %}" class="font-bold text-xl">MDRRM Incident Reporting System</a>
                 </div>
                 <!-- Desktop Navigation -->
             </div>
@@ -88,11 +88,7 @@
                 <img src="/static/logo/lgu_logo.png" alt="LGU Logo" class="h-10 w-auto">
             </div>
             <p class="text-white font-medium">
-                {% if user.is_staff %}
-                    Incident Management System
-                {% else %}
-                    Incident Report System
-                {% endif %}
+                MDRRM Incident Reporting System
             </p>
         </div>
 
