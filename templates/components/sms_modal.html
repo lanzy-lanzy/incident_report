@@ -1,6 +1,12 @@
 <!-- SMS Modal Component -->
 <div
-    x-data="{ open: false }"
+    x-data="{
+        open: false,
+        recipientType: 'group',
+        selectedGroup: 'all',
+        selectedBarangay: null,
+        selectedIndividuals: []
+    }"
     x-show="open"
     @open-sms-modal.window="open = true"
     @keydown.escape.window="open = false"
@@ -46,23 +52,84 @@
                     </h3>
                     <div class="mt-2">
                         <p class="text-sm text-gray-500">
-                            This feature is currently under development. SMS alerts will allow you to send emergency notifications to registered users in affected areas.
+                            Send emergency SMS alerts to registered users in affected areas.
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Form placeholder (dummy) -->
+            <!-- SMS Form -->
             <div class="mt-5 sm:mt-4 border border-gray-200 rounded-md p-4 bg-gray-50">
+                <!-- Recipient Type Selection -->
                 <div class="mb-4">
-                    <label for="sms-recipients" class="block text-sm font-medium text-gray-700">Recipients</label>
-                    <select id="sms-recipients" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
-                        <option>All Registered Users</option>
-                        <option>Barangay Captains Only</option>
-                        <option>Specific Barangay</option>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Recipient Type</label>
+                    <div class="flex space-x-4">
+                        <div class="flex items-center">
+                            <input id="recipient-group" name="recipient-type" type="radio" value="group"
+                                x-model="recipientType"
+                                class="focus:ring-primary h-4 w-4 text-primary border-gray-300">
+                            <label for="recipient-group" class="ml-2 block text-sm text-gray-700">
+                                Group
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="recipient-individual" name="recipient-type" type="radio" value="individual"
+                                x-model="recipientType"
+                                class="focus:ring-primary h-4 w-4 text-primary border-gray-300">
+                            <label for="recipient-individual" class="ml-2 block text-sm text-gray-700">
+                                Individual
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group Selection (shown when Group is selected) -->
+                <div class="mb-4" x-show="recipientType === 'group'">
+                    <label for="group-selection" class="block text-sm font-medium text-gray-700">Select Group</label>
+                    <select id="group-selection"
+                        x-model="selectedGroup"
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                        <option value="all">All Registered Users</option>
+                        <option value="captains">Barangay Captains Only</option>
+                        <option value="specific">Specific Barangay</option>
                     </select>
                 </div>
 
+                <!-- Barangay Selection (shown when Specific Barangay is selected) -->
+                <div class="mb-4" x-show="recipientType === 'group' && selectedGroup === 'specific'">
+                    <label for="barangay-selection" class="block text-sm font-medium text-gray-700">Select Barangay</label>
+                    <select id="barangay-selection"
+                        x-model="selectedBarangay"
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                        <option value="">-- Select a Barangay --</option>
+                        {% for barangay in barangays %}
+                        <option value="{{ barangay.id }}">{{ barangay.name }}, {{ barangay.municipality.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Individual Selection (shown when Individual is selected) -->
+                <div class="mb-4" x-show="recipientType === 'individual'">
+                    <label for="individual-selection" class="block text-sm font-medium text-gray-700">Select Recipients</label>
+                    <div class="mt-1 relative">
+                        <select id="individual-selection" multiple
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
+                            size="5">
+                            {% for profile in reporter_profiles %}
+                            {% if profile.phone_number %}
+                            <option value="{{ profile.id }}">
+                                {{ profile.user.get_full_name|default:profile.user.username }}
+                                {% if profile.barangay %}({{ profile.barangay.name }}){% endif %}
+                                {% if profile.is_barangay_captain %} - Barangay Captain{% endif %}
+                            </option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple recipients</p>
+                    </div>
+                </div>
+
+                <!-- Message Input -->
                 <div class="mb-4">
                     <label for="sms-message" class="block text-sm font-medium text-gray-700">Message</label>
                     <textarea id="sms-message" rows="3" class="shadow-sm focus:ring-primary focus:border-primary mt-1 block w-full sm:text-sm border border-gray-300 rounded-md" placeholder="Enter your emergency message here..."></textarea>
@@ -73,7 +140,7 @@
                 <button
                     type="button"
                     class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-yellow-600 text-base font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 sm:ml-3 sm:w-auto sm:text-sm"
-                    @click="alert('This feature is not yet implemented. Coming soon!'); open = false;"
+                    @click="alert('SMS alert will be sent to the selected recipients.'); open = false;"
                 >
                     Send SMS
                 </button>

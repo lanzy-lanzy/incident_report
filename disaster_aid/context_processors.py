@@ -1,4 +1,4 @@
-from .models import IncidentReport, UserNotification, DisasterAlert
+from .models import IncidentReport, UserNotification, DisasterAlert, Barangay, ReporterProfile
 
 def incident_notifications(request):
     """
@@ -47,6 +47,34 @@ def incident_notifications(request):
             'user_notifications': user_notifications,
             'unread_user_notifications_count': unread_count,
             'has_user_notifications': unread_count > 0,
+        })
+
+    return context
+
+def sms_modal_data(request):
+    """
+    Context processor to provide data for the SMS modal component.
+    """
+    context = {
+        'barangays': [],
+        'reporter_profiles': [],
+    }
+
+    # Only provide SMS data for admin users
+    if request.user.is_authenticated and request.user.is_staff:
+        # Get all barangays for the dropdown
+        barangays = Barangay.objects.all().select_related('municipality').order_by('name')
+
+        # Get all reporter profiles with phone numbers for individual selection
+        reporter_profiles = ReporterProfile.objects.filter(
+            phone_number__isnull=False
+        ).exclude(
+            phone_number=''
+        ).select_related('user', 'barangay')
+
+        context.update({
+            'barangays': barangays,
+            'reporter_profiles': reporter_profiles,
         })
 
     return context

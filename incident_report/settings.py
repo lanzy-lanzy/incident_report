@@ -67,6 +67,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'disaster_aid.context_processors.incident_notifications',
+                'disaster_aid.context_processors.sms_modal_data',
             ],
         },
     },
