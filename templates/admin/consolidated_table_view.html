@@ -2,6 +2,57 @@
 
 {% block title %}Consolidated Data Table{% endblock %}
 
+{% block extra_head %}
+<style>
+    /* Custom styles for the consolidated table view */
+    .text-shadow {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Improve header visibility with better contrast */
+    #consolidated-table th {
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Add subtle hover effect to table headers */
+    #consolidated-table th:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transition: background-color 0.2s ease;
+    }
+
+    /* Add subtle shine effect to the header */
+    #consolidated-table thead::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+        0% { left: -100%; }
+        100% { left: 200%; }
+    }
+
+    /* Ensure the header has proper spacing */
+    #consolidated-table thead {
+        position: relative;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-8 text-gray-800">Consolidated Data Table</h1>
@@ -52,17 +103,17 @@
             <!-- Scrollable container with fixed height -->
             <div class="overflow-x-auto overflow-y-auto" style="max-height: 70vh;">
                 <table id="consolidated-table" class="min-w-full divide-y divide-gray-200">
-                    <!-- Sticky header -->
-                    <thead class="bg-gradient-to-r from-primary to-primary-dark text-white sticky top-0 z-10">
+                    <!-- Sticky header with improved gradient and text visibility -->
+                    <thead class="bg-gradient-to-r from-blue-800 via-primary to-indigo-800 text-white sticky top-0 z-10 shadow-lg">
                         <tr>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">Barangay</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">Municipality</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">Barangay Captain</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">Evacuation Centers</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">Total Evacuees</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">Incident Reports</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">Distributions</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
+                            <th scope="col" class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-shadow">Barangay</th>
+                            <th scope="col" class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-shadow">Municipality</th>
+                            <th scope="col" class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-shadow">Barangay Captain</th>
+                            <th scope="col" class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-shadow">Evacuation Centers</th>
+                            <th scope="col" class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-shadow">Total Evacuees</th>
+                            <th scope="col" class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-shadow">Incident Reports</th>
+                            <th scope="col" class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-shadow">Distributions</th>
+                            <th scope="col" class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-shadow">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
