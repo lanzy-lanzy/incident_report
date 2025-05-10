@@ -498,32 +498,216 @@ class EvacueeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
-        center_id = kwargs.pop('center_id', None)
-        super().__init__(*args, **kwargs)
 
-        # If a specific evacuation center is provided, pre-select it and make it read-only
-        if center_id:
-            try:
-                center = EvacuationCenter.objects.get(id=center_id)
-                self.fields['evacuation_center'].initial = center
-                self.fields['evacuation_center'].widget.attrs['disabled'] = 'disabled'
-                self.fields['evacuation_center'].required = False
-            except:
-                pass
-        # If the user is a barangay captain, limit evacuation centers to their barangay
-        elif user and not user.is_superuser:
-            try:
-                profile = user.reporterprofile
-                if profile.is_barangay_captain and profile.barangay:
-                    self.fields['evacuation_center'].queryset = EvacuationCenter.objects.filter(
-                        barangay=profile.barangay
-                    )
-            except:
-                pass
 
-    def clean_evacuation_center(self):
-        # If the evacuation_center field is disabled in the form, it won't be in cleaned_data
-        # So we need to get it from the initial data
-        if 'evacuation_center' not in self.cleaned_data and self.initial.get('evacuation_center'):
-            return self.initial.get('evacuation_center')
-        return self.cleaned_data.get('evacuation_center')
+# User Management Forms
+class AdminUserCreationForm(UserCreationForm):
+    """Form for creating new users by admin"""
+    first_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'First Name',
+            }
+        )
+    )
+    last_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Last Name',
+            }
+        )
+    )
+    username = forms.CharField(
+        widget=forms.TextInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Username',
+            }
+        )
+    )
+    password1 = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Password',
+            }
+        )
+    )
+    password2 = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Confirm Password',
+            }
+        )
+    )
+    is_staff = forms.BooleanField(
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                'class': 'h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded',
+            }
+        ),
+        help_text="Designates whether this user can access the admin site."
+    )
+    barangay = forms.ModelChoiceField(
+        queryset=Barangay.objects.filter(municipality__name='Tambulig').order_by('name'),
+        empty_label="-- Select Barangay --",
+        required=True,
+        widget=forms.Select(
+            attrs={
+                'class': INPUT_CLASSES,
+            }
+        )
+    )
+    is_barangay_captain = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(
+            attrs={
+                'class': 'h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded',
+            }
+        ),
+        help_text="Designates whether this user is a barangay captain"
+    )
+    phone_number = forms.CharField(
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Phone Number',
+            }
+        )
+    )
+    profile_image = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'accept': 'image/*',
+            }
+        )
+    )
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'password1', 'password2', 'is_staff')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.first_name = self.cleaned_data.get('first_name', '')
+        user.last_name = self.cleaned_data.get('last_name', '')
+        user.is_staff = self.cleaned_data.get('is_staff', False)
+
+        # Set a placeholder email
+        barangay = self.cleaned_data.get('barangay')
+        if barangay:
+            user.email = f"{user.username}_{barangay.name.lower().replace(' ', '_')}@example.com"
+
+        if commit:
+            user.save()
+
+            # Create the user profile
+            ReporterProfile.objects.create(
+                user=user,
+                profile_image=self.cleaned_data.get('profile_image'),
+                barangay=barangay,
+                phone_number=self.cleaned_data.get('phone_number'),
+                is_barangay_captain=self.cleaned_data.get('is_barangay_captain', True)
+            )
+
+        return user
+
+
+class UserEditForm(forms.ModelForm):
+    """Form for editing existing users"""
+    first_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'First Name',
+            }
+        )
+    )
+    last_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Last Name',
+            }
+        )
+    )
+    is_staff = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                'class': 'h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded',
+            }
+        ),
+        help_text="Designates whether this user can access the admin site."
+    )
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'is_staff')
+
+
+class ProfileEditForm(forms.ModelForm):
+    """Form for editing user profiles"""
+    barangay = forms.ModelChoiceField(
+        queryset=Barangay.objects.filter(municipality__name='Tambulig').order_by('name'),
+        empty_label="-- Select Barangay --",
+        required=True,
+        widget=forms.Select(
+            attrs={
+                'class': INPUT_CLASSES,
+            }
+        )
+    )
+    is_barangay_captain = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                'class': 'h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded',
+            }
+        ),
+        help_text="Designates whether this user is a barangay captain"
+    )
+    phone_number = forms.CharField(
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Phone Number',
+            }
+        )
+    )
+    profile_image = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(
+            attrs={
+                'class': INPUT_CLASSES,
+                'accept': 'image/*',
+            }
+        )
+    )
+
+    class Meta:
+        model = ReporterProfile
+        fields = ('barangay', 'is_barangay_captain', 'phone_number', 'profile_image')
+
+
+

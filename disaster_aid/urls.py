@@ -15,7 +15,7 @@ from .views import (
     # Admin views
     comprehensive_view, consolidated_table_view, export_consolidated_pdf,
     # User Management views
-    user_management
+    user_management, create_user, edit_user, delete_user
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -82,6 +82,9 @@ urlpatterns = [
 
     # User Management URLs
     path('users/', user_management, name='user_management'),
+    path('users/create/', create_user, name='create_user'),
+    path('users/<int:user_id>/edit/', edit_user, name='edit_user'),
+    path('users/<int:user_id>/delete/', delete_user, name='delete_user'),
 ]
 
 # Add media URL patterns in development

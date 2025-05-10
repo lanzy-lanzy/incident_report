@@ -11,13 +11,15 @@ from django.utils import timezone
 from .forms import (
     LoginForm, RegisterForm, IncidentReportForm,
     DistributionRequestForm, InventoryForm, DenyIncidentForm,
-    DisasterAlertForm, EvacuationCenterForm, EvacueeForm
+    DisasterAlertForm, EvacuationCenterForm, EvacueeForm,
+    # User Management Forms
+    AdminUserCreationForm, UserEditForm, ProfileEditForm
 )
 from .models import (
     IncidentReport, DisasterType, DistributionType,
     Inventory, IncidentDistribution, UserNotification,
     DisasterAlert, Barangay, Municipality,
-    EvacuationCenter, Evacuee
+    EvacuationCenter, Evacuee, ReporterProfile
 )
 import io
 import os
@@ -2320,3 +2322,84 @@ def user_management(request):
     }
 
     return render(request, 'users/user_management.html', context)
+
+
+@staff_member_required
+def create_user(request):
+    """View for creating a new user"""
+    if request.method == 'POST':
+        form = AdminUserCreationForm(request.POST, request.FILES)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f"User '{user.username}' has been created successfully.")
+            return redirect('user_management')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        form = AdminUserCreationForm()
+
+    context = {
+        'form': form,
+        'title': 'Create New User',
+    }
+
+    return render(request, 'users/user_form.html', context)
+
+
+@staff_member_required
+def edit_user(request, user_id):
+    """View for editing an existing user"""
+    user = get_object_or_404(User, id=user_id)
+
+    try:
+        profile = user.reporterprofile
+    except ReporterProfile.DoesNotExist:
+        # Create a profile if it doesn't exist
+        profile = ReporterProfile.objects.create(user=user)
+
+    if request.method == 'POST':
+        user_form = UserEditForm(request.POST, instance=user)
+        profile_form = ProfileEditForm(request.POST, request.FILES, instance=profile)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, f"User '{user.username}' has been updated successfully.")
+            return redirect('user_management')
+        else:
+            for form in [user_form, profile_form]:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{field}: {error}")
+    else:
+        user_form = UserEditForm(instance=user)
+        profile_form = ProfileEditForm(instance=profile)
+
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'title': f'Edit User: {user.username}',
+        'user_obj': user,
+    }
+
+    return render(request, 'users/user_edit_form.html', context)
+
+
+@staff_member_required
+def delete_user(request, user_id):
+    """View for deleting a user"""
+    user = get_object_or_404(User, id=user_id)
+
+    if request.method == 'POST':
+        username = user.username
+        user.delete()
+        messages.success(request, f"User '{username}' has been deleted successfully.")
+        return redirect('user_management')
+
+    context = {
+        'user_obj': user,
+    }
+
+    return render(request, 'users/user_confirm_delete.html', context)

@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Incident Report System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">{{ title }}</h1>
+        <a href="{% url 'user_management' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <svg class="mr-2 -ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to User Management
+        </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-800">User Information</h2>
+        </div>
+        <div class="p-6">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Username -->
+                <div>
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">Username</label>
+                    <div class="mt-1">
+                        {{ form.username }}
+                    </div>
+                    {% if form.username.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Name Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700">First Name</label>
+                        <div class="mt-1">
+                            {{ form.first_name }}
+                        </div>
+                        {% if form.first_name.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700">Last Name</label>
+                        <div class="mt-1">
+                            {{ form.last_name }}
+                        </div>
+                        {% if form.last_name.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Password Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700">Password</label>
+                        <div class="mt-1">
+                            {{ form.password1 }}
+                        </div>
+                        {% if form.password1.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                        <div class="mt-1">
+                            {{ form.password2 }}
+                        </div>
+                        {% if form.password2.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Barangay and Phone Number -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.barangay.id_for_label }}" class="block text-sm font-medium text-gray-700">Barangay</label>
+                        <div class="mt-1">
+                            {{ form.barangay }}
+                        </div>
+                        {% if form.barangay.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.barangay.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <div class="mt-1">
+                            {{ form.phone_number }}
+                        </div>
+                        {% if form.phone_number.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.phone_number.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Profile Image -->
+                <div>
+                    <label for="{{ form.profile_image.id_for_label }}" class="block text-sm font-medium text-gray-700">Profile Image</label>
+                    <div class="mt-1">
+                        {{ form.profile_image }}
+                    </div>
+                    {% if form.profile_image.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.profile_image.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-2 text-xs text-gray-500">Optional. Upload a profile image for this user.</p>
+                </div>
+                
+                <!-- Checkboxes -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.is_staff }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.is_staff.id_for_label }}" class="font-medium text-gray-700">Admin Access</label>
+                            <p class="text-gray-500">{{ form.is_staff.help_text }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.is_barangay_captain }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.is_barangay_captain.id_for_label }}" class="font-medium text-gray-700">Barangay Captain</label>
+                            <p class="text-gray-500">{{ form.is_barangay_captain.help_text }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
