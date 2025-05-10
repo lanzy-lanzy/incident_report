@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.db.models import Count
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
+from django.contrib.admin.views.decorators import staff_member_required
 from django.utils import timezone
 from .forms import (
     LoginForm, RegisterForm, IncidentReportForm,
@@ -2291,3 +2292,31 @@ def export_consolidated_pdf(request):
     response['Content-Disposition'] = 'attachment; filename="consolidated_barangay_report.pdf"'
 
     return response
+
+
+# User Management Views
+@staff_member_required
+def user_management(request):
+    """View for managing users in the system"""
+    # Get all users with their profiles
+    users = User.objects.select_related('reporterprofile').all().order_by('-is_staff', 'username')
+
+    # Paginate users
+    paginator = Paginator(users, 10)  # Show 10 users per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Get barangay statistics
+    barangay_stats = Barangay.objects.annotate(
+        user_count=Count('reporterprofile')
+    ).order_by('-user_count')
+
+    context = {
+        'page_obj': page_obj,
+        'barangay_stats': barangay_stats,
+        'total_users': users.count(),
+        'admin_users': users.filter(is_staff=True).count(),
+        'barangay_captains': users.filter(reporterprofile__is_barangay_captain=True).count(),
+    }
+
+    return render(request, 'users/user_management.html', context)

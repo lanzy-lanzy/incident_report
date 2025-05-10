@@ -13,7 +13,9 @@ from .views import (
     activate_evacuation_center, deactivate_evacuation_center, close_evacuation_center,
     add_evacuee, evacuee_departure, generate_evacuation_report,
     # Admin views
-    comprehensive_view, consolidated_table_view, export_consolidated_pdf
+    comprehensive_view, consolidated_table_view, export_consolidated_pdf,
+    # User Management views
+    user_management
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -77,6 +79,9 @@ urlpatterns = [
     path('comprehensive-data/', comprehensive_view, name='comprehensive_view'),
     path('consolidated-table/', consolidated_table_view, name='consolidated_table_view'),
     path('export-consolidated-pdf/', export_consolidated_pdf, name='export_consolidated_pdf'),
+
+    # User Management URLs
+    path('users/', user_management, name='user_management'),
 ]
 
 # Add media URL patterns in development
