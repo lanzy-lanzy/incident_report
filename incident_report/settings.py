@@ -139,3 +139,11 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 TEMPLATES[0]['DIRS'].append(os.path.join(BASE_DIR, 'templates'))
+
+# SMS Chef API Settings
+SMSCHEF_API_SECRET = 'b7934566a58d4cd093fdf839d2011aa9e7ca2a1f'  # Add your API secret from (Tools -> API Keys) page
+SMSCHEF_DEVICE_ID = '9a18af1477b5f05a'  # Your device ID from SMS Chef (without hyphens)
+SMSCHEF_SIM = 2  # SIM slot to use (1 or 2)
+# API URLs for SMS Chef
+SMSCHEF_API_URL = 'https://www.cloud.smschef.com/api/send/sms'
+SMSCHEF_BULK_API_URL = 'https://www.cloud.smschef.com/api/send/sms.bulk'

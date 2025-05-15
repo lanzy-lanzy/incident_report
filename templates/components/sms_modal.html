@@ -5,10 +5,86 @@
         recipientType: 'group',
         selectedGroup: 'all',
         selectedBarangay: null,
-        selectedIndividuals: []
+        selectedIndividuals: [],
+        message: '',
+        sending: false,
+        error: null,
+        success: null,
+        data: null,
+
+        // Function to send SMS
+        sendSMS() {
+            // Validate form
+            if (!this.message.trim()) {
+                this.error = 'Please enter a message';
+                return;
+            }
+
+            if (this.recipientType === 'group' && this.selectedGroup === 'specific' && !this.selectedBarangay) {
+                this.error = 'Please select a barangay';
+                return;
+            }
+
+            if (this.recipientType === 'individual' && this.selectedIndividuals.length === 0) {
+                this.error = 'Please select at least one recipient';
+                return;
+            }
+
+            // Clear previous errors
+            this.error = null;
+            this.success = null;
+            this.sending = true;
+
+            // Prepare form data
+            const form = document.getElementById('sms-form');
+            const formData = new FormData(form);
+
+            // Send AJAX request
+            fetch('{% url 'send_sms_alert' %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(responseData => {
+                this.sending = false;
+                this.data = responseData; // Store the full response data
+
+                if (responseData.status === 'success') {
+                    this.success = responseData.message;
+                    // Reset form after success
+                    this.message = '';
+
+                    // If there's a warning, show it but still consider it a success
+                    if (responseData.warning) {
+                        this.error = null; // Clear any previous errors
+                        // Close modal after 5 seconds to give time to read the warning
+                        setTimeout(() => {
+                            this.open = false;
+                            this.data = null; // Clear data when closing
+                        }, 5000);
+                    } else {
+                        // Close modal after 3 seconds for clean success
+                        setTimeout(() => {
+                            this.open = false;
+                            this.data = null; // Clear data when closing
+                        }, 3000);
+                    }
+                } else {
+                    this.error = responseData.message || 'An error occurred while sending the SMS';
+                }
+            })
+            .catch(error => {
+                this.sending = false;
+                this.error = 'An error occurred while sending the SMS';
+                console.error('Error:', error);
+            });
+        }
     }"
     x-show="open"
-    @open-sms-modal.window="open = true"
+    @open-sms-modal.window="open = true; error = null; success = null; data = null;"
     @keydown.escape.window="open = false"
     class="fixed inset-0 z-50 overflow-y-auto"
     x-cloak
@@ -59,13 +135,33 @@
             </div>
 
             <!-- SMS Form -->
-            <div class="mt-5 sm:mt-4 border border-gray-200 rounded-md p-4 bg-gray-50">
+            <form id="sms-form" @submit.prevent="sendSMS" class="mt-5 sm:mt-4 border border-gray-200 rounded-md p-4 bg-gray-50">
+                {% csrf_token %}
+
+                <!-- Error Alert -->
+                <div x-show="error" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Error!</strong>
+                    <span class="block sm:inline" x-text="error"></span>
+                </div>
+
+                <!-- Success Alert -->
+                <div x-show="success" class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Success!</strong>
+                    <span class="block sm:inline" x-text="success"></span>
+                </div>
+
+                <!-- Warning Alert (for successful sends with warnings) -->
+                <div x-show="success && data && data.warning" class="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Warning:</strong>
+                    <span class="block sm:inline" x-text="data && data.warning"></span>
+                </div>
+
                 <!-- Recipient Type Selection -->
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Recipient Type</label>
                     <div class="flex space-x-4">
                         <div class="flex items-center">
-                            <input id="recipient-group" name="recipient-type" type="radio" value="group"
+                            <input id="recipient-group" name="recipient_type" type="radio" value="group"
                                 x-model="recipientType"
                                 class="focus:ring-primary h-4 w-4 text-primary border-gray-300">
                             <label for="recipient-group" class="ml-2 block text-sm text-gray-700">
@@ -73,7 +169,7 @@
                             </label>
                         </div>
                         <div class="flex items-center">
-                            <input id="recipient-individual" name="recipient-type" type="radio" value="individual"
+                            <input id="recipient-individual" name="recipient_type" type="radio" value="individual"
                                 x-model="recipientType"
                                 class="focus:ring-primary h-4 w-4 text-primary border-gray-300">
                             <label for="recipient-individual" class="ml-2 block text-sm text-gray-700">
@@ -86,7 +182,7 @@
                 <!-- Group Selection (shown when Group is selected) -->
                 <div class="mb-4" x-show="recipientType === 'group'">
                     <label for="group-selection" class="block text-sm font-medium text-gray-700">Select Group</label>
-                    <select id="group-selection"
+                    <select id="group-selection" name="group_type"
                         x-model="selectedGroup"
                         class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
                         <option value="all">All Registered Users</option>
@@ -98,7 +194,7 @@
                 <!-- Barangay Selection (shown when Specific Barangay is selected) -->
                 <div class="mb-4" x-show="recipientType === 'group' && selectedGroup === 'specific'">
                     <label for="barangay-selection" class="block text-sm font-medium text-gray-700">Select Barangay</label>
-                    <select id="barangay-selection"
+                    <select id="barangay-selection" name="barangay_id"
                         x-model="selectedBarangay"
                         class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
                         <option value="">-- Select a Barangay --</option>
@@ -112,7 +208,8 @@
                 <div class="mb-4" x-show="recipientType === 'individual'">
                     <label for="individual-selection" class="block text-sm font-medium text-gray-700">Select Recipients</label>
                     <div class="mt-1 relative">
-                        <select id="individual-selection" multiple
+                        <select id="individual-selection" name="profile_ids" multiple
+                            x-model="selectedIndividuals"
                             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
                             size="5">
                             {% for profile in reporter_profiles %}
@@ -132,26 +229,37 @@
                 <!-- Message Input -->
                 <div class="mb-4">
                     <label for="sms-message" class="block text-sm font-medium text-gray-700">Message</label>
-                    <textarea id="sms-message" rows="3" class="shadow-sm focus:ring-primary focus:border-primary mt-1 block w-full sm:text-sm border border-gray-300 rounded-md" placeholder="Enter your emergency message here..."></textarea>
+                    <textarea id="sms-message" name="message" rows="3"
+                        x-model="message"
+                        class="shadow-sm focus:ring-primary focus:border-primary mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
+                        placeholder="Enter your emergency message here..."></textarea>
                 </div>
-            </div>
 
-            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                <button
-                    type="button"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-yellow-600 text-base font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 sm:ml-3 sm:w-auto sm:text-sm"
-                    @click="alert('SMS alert will be sent to the selected recipients.'); open = false;"
-                >
-                    Send SMS
-                </button>
-                <button
-                    type="button"
-                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm"
-                    @click="open = false"
-                >
-                    Close
-                </button>
-            </div>
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button
+                        type="submit"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-yellow-600 text-base font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 sm:ml-3 sm:w-auto sm:text-sm"
+                        :disabled="sending"
+                    >
+                        <span x-show="!sending">Send SMS</span>
+                        <span x-show="sending" class="flex items-center">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Sending...
+                        </span>
+                    </button>
+                    <button
+                        type="button"
+                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm"
+                        @click="open = false"
+                        :disabled="sending"
+                    >
+                        Close
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
